@@ -1,5 +1,5 @@
- PhytoSFDM: Phytoplankton Size and Functional Diversity Model
-=============================================================
+PhytoSFDM: Phytoplankton Size and Functional Diversity Model
+============================================================
 
 PhytoSFDM is a modelling framework for studying the size structure and the 
 functional diversity of marine phytoplankton communities. The provided software 
@@ -43,7 +43,7 @@ daily time step is also included in this module.
 How to Install
 --------------
 
-We assume the user have a running version of python 2.7.x and have permissions 
+We assume the user have a running version of python 2.7.x and have permissions
 to write in the folder where the python distribution is installed. Still the 
 package have not been tested in python 3.x, but further developments of the 
 package will be compatible to newer versions of python. To install it the user 
@@ -94,7 +94,7 @@ can import the required library in an interactive python console as:
 >>> RBB= 2.5
 >>> SM1=SM(Lat,Lon,RBB,"Imm")
 
-Where SM is the class that contains all the methods to calculalte a specific size
+where SM is the class that contains all the methods to calculate a specific size
 model, Lat and Lon are Latitude and Longitude (notice that Lon should be written 
 in a scale from 0° to 360°), RBB is the range of the bounding box (in degrees) 
 for averaging the environmental forcing variables and SM1 is an object that 

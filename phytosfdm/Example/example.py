@@ -215,7 +215,9 @@ def main():
     print 'PhytoSFDM comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.'
     print 'This is a free software, and you are welcome to redistributed it'
     print 'under certain conditions; see LICENSE for details.'
-    
+
+    # TODO An interactive user i/o
+
     # Geographical coordinates of modelled region.
     Latitude = 47.5  # 90 to -90 degrees, North positive
     Longitude = 344.5  # 0 to 360 degrees
