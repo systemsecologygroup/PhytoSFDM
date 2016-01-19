@@ -1,0 +1,15 @@
+# Compiled python modules.
+*.pyc
+
+# Setuptools distribution and build folder.
+/build/
+
+# Virtual environments
+/venvCan/
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
+/dist/*.egg
+
+#pycharm generated files
+/*.idea*
