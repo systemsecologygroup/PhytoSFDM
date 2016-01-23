@@ -23,7 +23,7 @@ class ExtractEnvFor:
     lat: is the Latitude with a range from -90 to 90 degrees (South negative).
     lon: is the Longitude with a range from 0 to 365 degrees.
     rangebb: is the spatial range of the bounding box in degrees.
-    varname: is the varible names on the provided netcdf file. It could be either
+    varname: is the variable names on the provided netcdf file. It could be either
         'mld' for Mixed Layer Depth,'par' for Photosynthetic Active Radiation, 'sst'
         for Sea Surface Temperature and 'n0x' for nutrient concentration below MLD.
     """

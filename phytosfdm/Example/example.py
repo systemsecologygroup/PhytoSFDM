@@ -59,7 +59,7 @@ def modelscomparison(lat, lon, rbb):
     print '    Full=%4.3f sec' % (tos1-tos)
     Mtypes = SM_Full.outvariables[:, 3:]
     Ptot = np.sum(Mtypes, 1)
-    sizerange = SM_Full.Params['sizerange']
+    sizerange = np.linspace(np.log(SM_Full.Params['sizemin']), np.log(SM_Full.Params['sizemax']), num=SM_Full.Params['NoMtype'])
     Lmean = np.sum(Mtypes*sizerange, 1)/Ptot
     Lvar = np.sum(Mtypes*sizerange**2, 1)/Ptot - Lmean**2
     SM_VUnsust = SM(lat, lon, rbb, 'UnsustVar')
