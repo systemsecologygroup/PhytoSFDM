@@ -136,10 +136,6 @@ class SM:
             'sizemin': 0.2,            # Minimum size of the phytoplankton community (micro m ESD)
             'sizemax': 50.             # Maximum size of the phytoplankton community (micro m ESD)
         }
-        
-        default_parameters['sizerange'] = np.linspace(np.log(default_parameters['sizemin']),
-                                                      np.log(default_parameters['sizemax']),
-                                                      num=default_parameters['NoMtype'])
 
         if self.defaultParams:
             return default_parameters
@@ -590,7 +586,7 @@ class SM:
 
     def fullmodel(self, x, t):
         """
-        This size based model calcualtes the strucutral changes of a community
+        This size based model calculates structural changes of a community
         composed by n number of morphologically different phytoplankton.
 
         Parameters
@@ -603,7 +599,7 @@ class SM:
         D = x[2]
         Ps = x[3:]
         dxdt = np.zeros(len(x))
-        sizerange = self.Params['sizerange']
+        sizerange = np.linspace(np.log(self.Params['sizemin']), np.log(self.Params['sizemax']), num=self.Params['NoMtype'])
         
         # Edible phytoplankton
         Ped = np.sum(Ps*np.exp(sizerange)**self.Params['alphaG'])
