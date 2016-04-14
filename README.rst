@@ -20,33 +20,33 @@ finite number of phytoplankton morphotypes, each type with a specific size
 value (i.e. full model); or by approximating the size distribution using a 
 moment closure technique, where we only quantified the total biomass, the mean 
 size and the size variance of the community (i.e. aggregate models). These 
-approaches are inspired by early works of Wirtz & Eckhard (1996), Norberg et al. 
+approaches are inspired by early works of Wirtz & Eckhardt (1996), Norberg et al.
 (2001), Bruggeman & Koojiman (2007), Bruggeman (2009) and Merico et al. (2009). 
 Some examples of more recent applications of the moment-based approximation are 
-Wirtz (2013), Wirtz & Sommer (2013), Tersseler (2014), and Acevedo-Trejos et al. 
+Wirtz (2013), Wirtz & Sommer (2013), Terseleer et al. (2014), and Acevedo-Trejos et al.
 (2015).  
 
-The three main modules of the package are: Example, SizeModels, and EnvForcing. 
-The Example module is the entry point of the package, which computes and compares
+The three main modules of the package are: example, sizemodels, and envforcing.
+The example module is the entry point of the package, which computes and compares
 the two main model structures (full and aggregate) and the four variance 
-treatments (unsustained, fixed, immigration and trait diffusion) at a testing
-location in the north Atlantic Ocean. The module SizeModels contains a single 
+treatments (Unsustained, Fixed, Immigration and Trait Diffusion) at a testing
+location in the north Atlantic Ocean. The module sizemodels contains a single
 class with methods to quantify the phytoplankton size structure and their 
 functional diversity. Also within this class we provide methods to: a) modify 
 the default parameters, b) symbolically solve the derivatives of the fitness 
 function with respect to the trait, and c) log-transform the mean trait and
-the trait variance. The last module EnvForcing consist of one class with methods
+the trait variance. The last module envforcing consist of one class with methods
 to extract a spatially averaged forcing data provided in the NetCDF files. The 
-climatological data is at a monthly resolution, thus, a method to extrapolate to 
+climatological data is at a monthly resolution, thus, a method to interpolate to
 daily time step is also included in this module. 
 
 How to Install
 --------------
 
-We assume the user have a running version of python 2.7.x and have permissions
+We assume the user have a running version of Python 2.7.x and have permissions
 to write in the folder where the python distribution is installed. Still the 
-package have not been tested in python 3.x, but further developments of the 
-package will be compatible to newer versions of python. To install it the user 
+package have not been tested in Python 3.x, but further developments of the
+package will be compatible to newer versions of Python. To install it the user
 would require the latest versions of pip and setuptools. Additional dependencies
 are: matplotlib (version 1.4.3 or greater), numpy (version 1.9.2 or greater), 
 scipy (version 0.15.1 or greater) and sympy (version 0.7.6.1 or greater).
@@ -126,7 +126,7 @@ for further details.
 Acknowledgements
 ----------------
 I would like to thank Jorn Bruggeman for his valuable contribution to an 
-earlier version of the trait-based model and my colleagues, Gunnar Brandt,
+earlier version of the size-based model and my colleagues, Gunnar Brandt,
 S. Lan Smith and Agostino Merico for their continuous support and encouragement
 to complete this project.
 
@@ -134,14 +134,23 @@ References
 ----------
 
 Acevedo-Trejos, E., Brandt, G., Bruggeman, J. & Merico, A. Mechanisms shaping phytoplankton community structure and diversity in the ocean. Sci. Rep. 5, 8918 (2015).
+
 Bruggeman, J. & Kooijman, S. A. L. M. A biodiversity-inspired approach to aquatic ecosystem modeling. Limnol. Oceanogr. 52, 1533–1544 (2007).
+
 Bruggeman, J. Succession in plankton communities: A trait-based perspective. (2009).
+
 Fasham, M., Ducklow, H. W. & Mckelvie, S. M. A nitrogen-based model of plankton dynamics in the oceanic mixed layer. J. Mar. Res. 48, 591–639 (1990).
+
 Merico, A., Bruggeman, J. & Wirtz, K. A trait-based approach for downscaling complexity in plankton ecosystem models. Ecol. Modell. 220, 3001–3010 (2009).
+
 Norberg, J. et al. Phenotypic diversity and ecosystem functioning in changing environments: a theoretical framework. Proc. Natl. Acad. Sci. 98, 11376–81 (2001).
+
 Terseleer, N., Bruggeman, J., Lancelot, C. & Gypens, N. Trait-based representation of diatom functional diversity in a plankton functional type model of the eutrophied Southern North Sea. Limnol. Oceanogr. 59, 1–16 (2014).
+
 Wirtz, K. W. Mechanistic origins of variability in phytoplankton dynamics: Part I: niche formation revealed by a size-based model. Mar. Biol. 160, 2319–2335 (2013).
+
 Wirtz, K. W. & Sommer, U. Mechanistic origins of variability in phytoplankton dynamics. Part II: analysis of mesocosm blooms under climate change scenarios. Mar. Biol. 160, 2503–2516 (2013).
+
 Wirtz, K. W. & Eckhardt, B. Effective variables in ecosystem models with an application to phytoplankton succession. Ecol. Modell. 92, 33–53 (1996).
 
 

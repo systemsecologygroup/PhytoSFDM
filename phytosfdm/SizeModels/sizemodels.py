@@ -20,8 +20,8 @@ class SM:
     rangebb: is the spatial range of the bounding box in degrees.
     model: String specifying the size model variant to calculate, either 'Imm' for
         a model with immigration, 'TraitDif' for a model with trait diffusion
-        mechanism, 'Fixvar' for a model with a fix amount of variance or
-        'UnsustVar' for a model that does not sustain variance and "fullmodel"
+        mechanism, 'FixVar' for a model with a fix amount of variance or
+        'UnsustVar' for a model that does not sustain variance and "FullModel"
         for a size model with a full spectrum of morphotypes.
     listparams: A list of tuples ('parameter_name',value) with the new values for
         for the specified parameter.
@@ -39,8 +39,8 @@ class SM:
     -------
     outvariables: is a ndarray that contains the results of all state variables.
         In addition, in the ndarray we included dummy variables that quantify
-        the biomass fluxes between the state variables. Please refer to each model
-        to determine each variable.
+        the biomass fluxes between the state variables. Please refer to each model variant
+        to identify each variable.
     """
     
     def __init__(self, lat, lon, rangebb, model, listparams=[], defaultparams=True, assumimm="P&L"):
@@ -147,7 +147,7 @@ class SM:
     
     def sizemodel_imm(self, x, t):
         """
-        This size based model is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
+        This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
 
         Parameters
         ----------
@@ -266,8 +266,8 @@ class SM:
 
     def sizemodel_traitdif(self, x, t):
         """
-        This size based model is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
-        but with a trait difusion mechanism to sustain size variance as
+        This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
+        but with a trait diffusion mechanism to sustain size variance as
         suggested by Merico et al. (2014) in Frontiers in Ecology and Evolution.
 
         Parameters
@@ -376,7 +376,7 @@ class SM:
     
     def sizemodel_fixvar(self, x, t):
         """
-        This size based model is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
+        This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
         but with a fix size variance.
 
         Parameters
@@ -431,10 +431,10 @@ class SM:
         d2 = d2r0-d2r2-d2r3
 
         # Corrections of higher order moments 
-        E = 0.5*V*d2
-        EN = 0.5*V*d2r0
-        EZ = self.Params['deltaZ'] * 0.5*V*d2r2 * P
-        EZD = (1.-self.Params['deltaZ']) * 0.5*V*d2r2 * P
+        E = 0  # 0.5*V*d2
+        EN = 0  # 0.5*V*d2r0
+        EZ = 0  # self.Params['deltaZ'] * 0.5*V*d2r2 * P
+        EZD = 0  # (1.-self.Params['deltaZ']) * 0.5*V*d2r2 * P
         
         # state variables
         dxdt[0] = -P * (Gains + EN) + Mineralization + NMixing  # Nutrients
@@ -479,7 +479,7 @@ class SM:
     
     def sizemodel_unvar(self, x, t):
         """
-        This size based model is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
+        This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
         but without any mechanism to sustain variance.
 
         Parameters
@@ -586,7 +586,7 @@ class SM:
 
     def fullmodel(self, x, t):
         """
-        This size based model calculates structural changes of a community
+        This size based model variant calculates structural changes of a community
         composed by n number of morphologically different phytoplankton.
 
         Parameters
@@ -642,7 +642,7 @@ class SM:
 
     def modelrun(self):
         """
-        Method to integrate a specific size-based model.
+        Method to integrate a specific size-based model variant.
         The integration it is done with the module "integrate.odeint",
         from the library scipy.
         """
@@ -670,7 +670,7 @@ class SM:
                                                      
     def get_derivatives(self):
         """
-        Symbolic solutions for the derivatives of the phytoplankton growth with
+        Symbolic solutions for the derivatives of the phytoplankton growth terms with
         respect to the trait using library sympy.
         """
         # variables definition
