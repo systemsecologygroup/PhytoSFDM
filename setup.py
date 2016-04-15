@@ -24,7 +24,7 @@ setup(
     url="",
     packages=["phytosfdm", "phytosfdm.Example", "phytosfdm.SizeModels", "phytosfdm.EnvForcing"],
     classifiers=[
-        "Development Status :: 5 - Stable",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
