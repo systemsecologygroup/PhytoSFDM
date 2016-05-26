@@ -9,7 +9,7 @@ import matplotlib as mpl
 from phytosfdm.EnvForcing.envforcing import ExtractEnvFor
 from phytosfdm.SizeModels.sizemodels import SM
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 def environemntalforcing(lat, lon, rbb):
     tos = time.time()
@@ -28,7 +28,7 @@ def environemntalforcing(lat, lon, rbb):
     tos4 = time.time()
     print '    NOX=%4.3f seconds' % (tos4-tos3)
     
-    nt = np.arange(0., 365., 1.0)
+    nt = np.arange(0., 366., 1.0)
     
     # Figure NO.1
     f1, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, sharex='col', sharey='row')
@@ -41,10 +41,10 @@ def environemntalforcing(lat, lon, rbb):
     ax2.plot(nt, PAR.dailyinterp(nt), c='black', lw=3)
     ax2.set_ylabel('PAR \n' '(Ein / m^2 / d^1)', multialignment='center', fontsize=12)
     # SST
-    ax3.plot(nt, SST.dailyinterp(nt), c='black', lw=3)
+    ax3.plot(nt, SST.dailyinterp(nt, k=5), c='black', lw=3)
     ax3.set_ylabel('SST \n' '(degrees C)', multialignment='center', fontsize=12)
     # N0
-    ax4.plot(nt, N0X.dailyinterp(nt), c='black', lw=3)
+    ax4.plot(nt, N0X.dailyinterp(nt, k=5), c='black', lw=3)
     ax4.set_ylabel('N0 \n' '(mmol N / m^3)', multialignment='center', fontsize=12)
     ax4.set_xlabel('Time (days)', fontsize=14)
 

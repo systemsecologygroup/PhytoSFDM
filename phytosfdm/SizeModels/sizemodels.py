@@ -169,7 +169,7 @@ class SM:
         # Gains of phytoplankton biomass
         NutrientUptake = N/(N+self.Params['betaU']*np.exp(L)**self.Params['alphaU'])
         LightHarvesting = 1./(self.Params['kw'] * self.MLD.dailyinterp(t, k=3, s=0)) * (-np.exp(1. - self.PAR.dailyinterp(t) / self.Params['OptI']) - (-np.exp((1. - (self.PAR.dailyinterp(t) * np.exp(-self.Params['kw'] * self.MLD.dailyinterp(t, k=3, s=0))) / self.Params['OptI']))))
-        TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t))
+        TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t, k=5))
         Gains = self.Params['muP'] * NutrientUptake * LightHarvesting * TemperatureDepGrowth
         
         # Losses of phytoplankton biomass
@@ -186,7 +186,7 @@ class SM:
         UnassimilatedProduction = (1.-self.Params['deltaZ']) * Grazing * P
         Mineralization = self.Params['deltaD']*D
         DetritusMixing = D * (self.Params['kappa'] + max(self.MLD.firstderivspl(t, k=3, s=0), 0.)) / self.MLD.dailyinterp(t, k=3, s=0)
-        NMixing = Mixing * (self.N0X.dailyinterp(t) - N)
+        NMixing = Mixing * (self.N0X.dailyinterp(t, k=5) - N)
         
         # Derivatives for the growth components of phytoplankton with respect to the trait
         tt0 = self.Params['muP']*LightHarvesting*TemperatureDepGrowth
@@ -290,7 +290,7 @@ class SM:
         # Gains of phytoplankton biomass
         NutrientUptake = N/(N+self.Params['betaU']*np.exp(L)**self.Params['alphaU'])
         LightHarvesting = 1./(self.Params['kw'] * self.MLD.dailyinterp(t, k=3, s=0)) * (-np.exp(1. - self.PAR.dailyinterp(t) / self.Params['OptI']) - (-np.exp((1. - (self.PAR.dailyinterp(t) * np.exp(-self.Params['kw'] * self.MLD.dailyinterp(t, k=3, s=0))) / self.Params['OptI']))))
-        TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t))
+        TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t, k=5))
         Gains = self.Params['muP'] * NutrientUptake * LightHarvesting * TemperatureDepGrowth
         
         # Losses of phytoplankton biomass
@@ -307,7 +307,7 @@ class SM:
         UnassimilatedProduction = (1.-self.Params['deltaZ']) * Grazing * P
         Mineralization = self.Params['deltaD']*D
         DetritusMixing = D * (self.Params['kappa'] + max(self.MLD.firstderivspl(t, k=3, s=0), 0.)) / self.MLD.dailyinterp(t, k=3, s=0)
-        NMixing = Mixing * (self.N0X.dailyinterp(t) - N)
+        NMixing = Mixing * (self.N0X.dailyinterp(t, k=5) - N)
         
         # Derivatives for the growth components of phytoplankton with respect to the trait
         tt0 = self.Params['muP']*LightHarvesting*TemperatureDepGrowth
@@ -399,7 +399,7 @@ class SM:
         # Gains of phytoplankton biomass
         NutrientUptake = N/(N+self.Params['betaU']*np.exp(L)**self.Params['alphaU'])
         LightHarvesting = 1./(self.Params['kw'] * self.MLD.dailyinterp(t, k=3, s=0)) * (-np.exp(1. - self.PAR.dailyinterp(t) / self.Params['OptI']) - (-np.exp((1. - (self.PAR.dailyinterp(t) * np.exp(-self.Params['kw'] * self.MLD.dailyinterp(t, k=3, s=0))) / self.Params['OptI']))))
-        TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t))
+        TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t, k=5))
         Gains = self.Params['muP'] * NutrientUptake * LightHarvesting * TemperatureDepGrowth
         
         # Losses of phytoplankton biomass
@@ -416,7 +416,7 @@ class SM:
         UnassimilatedProduction = (1.-self.Params['deltaZ']) * Grazing * P
         Mineralization = self.Params['deltaD']*D
         DetritusMixing = D * (self.Params['kappa'] + max(self.MLD.firstderivspl(t, k=3, s=0), 0.)) / self.MLD.dailyinterp(t, k=3, s=0)
-        NMixing = Mixing * (self.N0X.dailyinterp(t) - N)
+        NMixing = Mixing * (self.N0X.dailyinterp(t, k=5) - N)
         
         # Derivatives for the growth components of phytoplankton with respect to the trait
         tt0 = self.Params['muP']*LightHarvesting*TemperatureDepGrowth
@@ -502,7 +502,7 @@ class SM:
         # Gains of phytoplankton biomass
         NutrientUptake = N/(N+self.Params['betaU']*np.exp(L)**self.Params['alphaU'])
         LightHarvesting = 1./(self.Params['kw'] * self.MLD.dailyinterp(t, k=3, s=0)) * (-np.exp(1. - self.PAR.dailyinterp(t) / self.Params['OptI']) - (-np.exp((1. - (self.PAR.dailyinterp(t) * np.exp(-self.Params['kw'] * self.MLD.dailyinterp(t, k=3, s=0))) / self.Params['OptI']))))
-        TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t))
+        TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t, k=5))
         Gains = self.Params['muP'] * NutrientUptake * LightHarvesting * TemperatureDepGrowth
         
         # Losses of phytoplankton biomass
@@ -519,7 +519,7 @@ class SM:
         UnassimilatedProduction = (1.-self.Params['deltaZ']) * Grazing * P
         Mineralization = self.Params['deltaD']*D
         DetritusMixing = D * (self.Params['kappa'] + max(self.MLD.firstderivspl(t, k=3, s=0), 0.)) / self.MLD.dailyinterp(t, k=3, s=0)
-        NMixing = Mixing * (self.N0X.dailyinterp(t) - N)
+        NMixing = Mixing * (self.N0X.dailyinterp(t, k=5) - N)
         
         # Derivatives for the growth components of phytoplankton with respect to the trait
         tt0 = self.Params['muP']*LightHarvesting*TemperatureDepGrowth
@@ -610,7 +610,7 @@ class SM:
         ZooMixing = Z * self.MLD.firstderivspl(t, k=3, s=0) / self.MLD.dailyinterp(t, k=3, s=0)
         Mineralization = self.Params['deltaD']*D
         DetritusMixing = D * (self.Params['kappa'] + max(self.MLD.firstderivspl(t, k=3, s=0), 0.)) / self.MLD.dailyinterp(t, k=3, s=0)
-        NMixing = Mixing * (self.N0X.dailyinterp(t) - N)
+        NMixing = Mixing * (self.N0X.dailyinterp(t, k=5) - N)
         
         dxdt[0] = Mineralization + NMixing
         dxdt[1] = - ZooMortality - ZooMixing
@@ -622,7 +622,7 @@ class SM:
             # Gains of phytoplankton biomass
             NutrientUptake = N/(N+self.Params['betaU']*np.exp(S)**self.Params['alphaU'])
             LightHarvesting = 1. / (self.Params['kw'] * self.MLD.dailyinterp(t, k=3, s=0)) * (-np.exp(1. - self.PAR.dailyinterp(t) / self.Params['OptI']) - (-np.exp((1. - (self.PAR.dailyinterp(t) * np.exp(-self.Params['kw'] * self.MLD.dailyinterp(t, k=3, s=0))) / self.Params['OptI']))))
-            TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t))
+            TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t, k=5))
             Gains = self.Params['muP'] * NutrientUptake * LightHarvesting * TemperatureDepGrowth
             # Losses of phytoplankton biomass
             Grazing = self.Params['muZ']*Z*np.exp(S)**self.Params['alphaG']/(Ped+self.Params['Kp'])
