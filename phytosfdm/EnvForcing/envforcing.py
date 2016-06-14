@@ -20,8 +20,8 @@ class ExtractEnvFor:
 
     Parameters
     ----------
-    lat: is the Latitude with a range from -90 to 90 degrees (South negative).
-    lon: is the Longitude with a range from 0 to 365 degrees.
+    lat: is the Latitude with a range from -90 to 90 degrees (North negative).
+    lon: is the Longitude with a range from -180 to 180 degrees (East positive).
     rangebb: is the spatial range of the bounding box in degrees.
     varname: is the variable names on the provided netcdf file. It could be either
         'mld' for Mixed Layer Depth,'par' for Photosynthetic Active Radiation, 'sst'
@@ -51,22 +51,22 @@ class ExtractEnvFor:
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             (latindx,) = np.logical_and(nclat <= self.Lat+self.RangeBB, nclat >= self.Lat-self.RangeBB).nonzero()
-            (lonindx,) = np.logical_and(nclon <= self.Lon+self.RangeBB, nclon >= self.Lon-self.RangeBB).nonzero()
+            (lonindx,) = np.logical_and(nclon <= self.Lon+360+self.RangeBB, nclon >= self.Lon+360-self.RangeBB).nonzero()
             for i in range(12):
                 ncdat = ncfile.variables[self.varname][i, latindx.min():latindx.max(), lonindx.min():lonindx.max()].copy()
-                mskncdat = np.ma.masked_where(ncdat<0, ncdat)
+                mskncdat = np.ma.masked_where(ncdat < 0, ncdat)
                 outforcing = np.append(outforcing, np.mean(mskncdat))
             ncfile.close()
             return np.append(outforcing, outforcing[0])
         elif self.varname == 'par':
-            ncfile = netcdf.netcdf_file(self.fordir+'/par_MODIS_2002to2011.nc','r')
+            ncfile = netcdf.netcdf_file(self.fordir+'/par_MODIS_2002to2011.nc', 'r')
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             (latindx,) = np.logical_and(nclat <= self.Lat+self.RangeBB, nclat >= self.Lat-self.RangeBB).nonzero()
-            (lonindx,) = np.logical_and(nclon <= self.Lon+self.RangeBB, nclon >= self.Lon-self.RangeBB).nonzero()
+            (lonindx,) = np.logical_and(nclon <= self.Lon+180+self.RangeBB, nclon >= self.Lon+180-self.RangeBB).nonzero()
             for i in range(12):
                 ncdat = ncfile.variables[self.varname][i, latindx.min():latindx.max(), lonindx.min():lonindx.max()].copy()
-                mskncdat = np.ma.masked_where(ncdat<0, ncdat)
+                mskncdat = np.ma.masked_where(ncdat < 0, ncdat)
                 outforcing = np.append(outforcing, np.mean(mskncdat))
             ncfile.close()
             return np.append(outforcing, outforcing[0])
@@ -75,25 +75,25 @@ class ExtractEnvFor:
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             (latindx,) = np.logical_and(nclat <= self.Lat+self.RangeBB, nclat >= self.Lat-self.RangeBB).nonzero()
-            (lonindx,) = np.logical_and(nclon <= self.Lon+self.RangeBB, nclon >= self.Lon-self.RangeBB).nonzero()
+            (lonindx,) = np.logical_and(nclon <= self.Lon+360+self.RangeBB, nclon >= self.Lon+360-self.RangeBB).nonzero()
             ncdepth = ncfile.variables['depth'].data.copy()
-            mld = ExtractEnvFor(self.Lat,self.Lon,self.RangeBB,'mld')
+            mld = ExtractEnvFor(self.Lat, self.Lon, self.RangeBB, 'mld')
             for i in range(12):
                 (depthindx,) = (ncdepth >= mld.outForcing[i]).nonzero()
                 ncdat = ncfile.variables[self.varname][i, depthindx.min(), latindx.min():latindx.max(), lonindx.min():lonindx.max()].copy()
-                mskncdat = np.ma.masked_where(ncdat<0, ncdat)
+                mskncdat = np.ma.masked_where(ncdat < 0, ncdat)
                 outforcing = np.append(outforcing, np.mean(mskncdat))
             ncfile.close()
             return np.append(outforcing, outforcing[0])
         elif self.varname == 'sst':
-            ncfile = netcdf.netcdf_file(self.fordir+'/sst-t_an-WOA09.nc','r')
+            ncfile = netcdf.netcdf_file(self.fordir+'/sst-t_an-WOA09.nc', 'r')
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             (latindx,) = np.logical_and(nclat <= self.Lat+self.RangeBB, nclat >= self.Lat-self.RangeBB).nonzero()
-            (lonindx,) = np.logical_and(nclon <= self.Lon+self.RangeBB, nclon >= self.Lon-self.RangeBB).nonzero()
+            (lonindx,) = np.logical_and(nclon <= self.Lon+360+self.RangeBB, nclon >= self.Lon+360-self.RangeBB).nonzero()
             for i in range(12):
                 ncdat = ncfile.variables[self.varname][i, 0, latindx.min():latindx.max(), lonindx.min():lonindx.max()].copy()
-                mskncdat = np.ma.masked_where(ncdat>100, ncdat)
+                mskncdat = np.ma.masked_where(ncdat > 100, ncdat)
                 outforcing = np.append(outforcing, np.mean(mskncdat))
             ncfile.close() 
             return np.append(outforcing,outforcing[0])
@@ -117,8 +117,8 @@ class ExtractEnvFor:
         The temporally interpolated environmental forcing.
         """
         
-        tmonth = np.linspace(0.,12.,13.)
-        newt = np.mod(time,365.)*12./365.
+        tmonth = np.linspace(0., 12., 13.)
+        newt = np.mod(time, 365.)*12./365.
         if kind == 'spline':
             outintp = intrp.UnivariateSpline(tmonth, self.outForcing, k=k, s=s)
             return outintp(newt)

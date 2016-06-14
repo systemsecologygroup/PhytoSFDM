@@ -15,8 +15,8 @@ class SM:
 
     Parameters
     ----------
-    lat: is the Latitude with a range from -90 to 90 degrees (South negative).
-    lon: is the Longitude with a range from 0 to 365 degrees.
+    lat: is the Latitude with a range from -90 to 90 degrees (North positive).
+    lon: is the Longitude with a range from -180 to 180 degrees (East positive).
     rangebb: is the spatial range of the bounding box in degrees.
     model: String specifying the size model variant to calculate, either 'Imm' for
         a model with immigration, 'TraitDif' for a model with trait diffusion

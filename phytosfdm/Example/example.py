@@ -9,7 +9,7 @@ import matplotlib as mpl
 from phytosfdm.EnvForcing.envforcing import ExtractEnvFor
 from phytosfdm.SizeModels.sizemodels import SM
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 def environemntalforcing(lat, lon, rbb):
     tos = time.time()
@@ -219,10 +219,10 @@ def main():
 
     # Geographical coordinates of modelled region.
     Latitude = 47.5  # 90 to -90 degrees, North positive
-    Longitude = 344.5  # 0 to 360 degrees
+    Longitude = -15.5  # -180 to 180 degrees, East positive
     RangeBoundingBox = 2.  # In degrees
     
-    print '\nSize Models calculated at test location: %.2f°N %.2f°W' % (Latitude, Longitude-360)
+    print '\nSize Model variants calculated at test location: %.2f°N %.2f°W' % (Latitude, abs(Longitude))
 
     environemntalforcing(Latitude, Longitude, RangeBoundingBox)
     

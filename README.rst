@@ -73,7 +73,7 @@ use command sudo before the suggested installation lines (Unix like systems).
 Usage
 -----
 
-The example calculates all the model variants at a testing location in the north
+The example calculates all the model variants at a testing location in the
 Atlantic Ocean (47.5° N and 15.5° W). To run the example just type in a terminal:
 
 $ PhytoSFDM_example
@@ -90,13 +90,13 @@ can import the required library in an interactive python console as:
 
 >>> from phytosfdm.SizeModels.sizemodels import SM
 >>> Lat= 47.5
->>> Lon= 344.5
+>>> Lon= -15.5
 >>> RBB= 2.5
 >>> SM1=SM(Lat,Lon,RBB,"Imm")
 
 where SM is the class that contains all the methods to calculate a specific size
-model, Lat and Lon are Latitude and Longitude (notice that Lon should be written 
-in a scale from 0° to 360°), RBB is the range of the bounding box (in degrees) 
+model, Lat and Lon are Latitude (-90 to 90 degrees, North negative) and Longitude
+(-180 to 180 degrees, East positive), RBB is the range of the bounding box (in degrees)
 for averaging the environmental forcing variables and SM1 is an object that 
 contains the results of the size model with an immigration treatment. After 
 execution the results of the model can be accessed by:
@@ -104,14 +104,12 @@ execution the results of the model can be accessed by:
 >>> SM1.outvariables
 
 In the multidimensional array "SM1.outvariables" the first dimension is time (e.g. 
-3650 days if the model is run with default parameters) and the second dimension 
+3650 days if the model is run with default parameters of 10 years) and the second dimension
 contains the state variables, for the full model, or the state variables and the 
-dummy variables for the aggregate models. In the case of SM1, i.e. a 
-size model of aggregate properties based on an immigration mechanism, 
+dummy variables for the aggregate models.
 
-
-To access all attribute values of the class instance "SM1" one can type in an 
-interactive python console:
+To access all attribute values of the class
+instance "SM1" one can type in an interactive python console:
 
 >>> SM1.__dict__
 
