@@ -9,7 +9,7 @@ import matplotlib as mpl
 from phytosfdm.EnvForcing.envforcing import ExtractEnvFor
 from phytosfdm.SizeModels.sizemodels import SM
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 def environemntalforcing(lat, lon, rbb):
     tos = time.time()
@@ -75,7 +75,7 @@ def modelscomparison(lat, lon, rbb):
     print '    Immigration=%4.3f seconds' % (tos5-tos4)
     
     nt = np.arange(0., 365., 1.0)
-    runtime = sm_vunsust.Params['timeyears']
+    runtime = int(sm_vunsust.Params['timeyears'])
     
     colors = ['#00C90D', '#01939A', 'black', 'grey', '#E2680B']
     alphas = [1., 0.8, 0.6, 0.4]
