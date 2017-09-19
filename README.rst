@@ -1,4 +1,4 @@
-PhytoSFDM: Phytoplankton Size and Functional Diversity Model x
+PhytoSFDM: Phytoplankton Size and Functional Diversity Modelx
 ============================================================
 
 PhytoSFDM is a modelling framework for studying the size structure and the 
