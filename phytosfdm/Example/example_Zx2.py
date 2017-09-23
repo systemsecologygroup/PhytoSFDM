@@ -221,7 +221,7 @@ def main():
     Longitude = -19.1  # -180 to 180 degrees, East positive
     RangeBoundingBox = 5.  # In degrees
 
-    print '\nSize Model variants calculated at test location: %.2f°N %.2f°W' % (Latitude, abs(Longitude))
+    print '\nCarnivore Model variants calculated at test location: %.2f°N %.2f°W' % (Latitude, abs(Longitude))
 
     environemntalforcing(Latitude, Longitude, RangeBoundingBox)
 
