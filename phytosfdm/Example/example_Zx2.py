@@ -9,7 +9,7 @@ import matplotlib as mpl
 from phytosfdm.EnvForcing.envforcing import ExtractEnvFor
 from phytosfdm.SizeModels.sizemodels import SM
 
-__version__ = "1.0.5"
+__version__ = "1.0.4"
 
 
 def environemntalforcing(lat, lon, rbb):
@@ -208,7 +208,7 @@ def modelplot(lat, lon, rbb):
               prop={'size': 10}, loc='upper center')
 
 
-def main():
+def main_Zx2():
     print 'PhytoSFDM version:%s, Copyright (C) 2016 Esteban Acevedo-Trejos' % __version__
     print 'PhytoSFDM comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.'
     print 'This is a free software, and you are welcome to redistributed it'
