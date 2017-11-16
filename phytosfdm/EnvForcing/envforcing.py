@@ -28,13 +28,14 @@ class ExtractEnvFor:
         for Sea Surface Temperature and 'n0x' for nutrient concentration below MLD.
     """
     
-    def __init__(self, lat, lon, rangebb, varname):
+    def __init__(self, lat, lon, rangebb, varname, rcpscenario):
         self.Lat = lat
         self.Lon = lon
         self.RangeBB = rangebb
         self.varname = varname
         self.fordir = os.path.split(os.path.realpath(__file__))[0]
         self.outForcing = self.spatialave()
+        self.rcpscenario = rcpscenario
            
     def spatialave(self):
         """
@@ -150,3 +151,60 @@ class ExtractEnvFor:
         newt = np.mod(time, 365.)
         outintp = intrp.UnivariateSpline(tmonth, self.outForcing, k=k, s=s)
         return outintp.derivative()(newt)
+
+    def spatialave_future(self, threedindat, twodinlats, twodinlons):
+        """ Method to calculate the spatial averages of environmental forcing
+        variables based on the data structure of RCP projections "var[time,x,y]"
+        or "var[time,depth,x,y]" as provided by the World Climate Research Programme.
+
+        Parameters
+        ----------
+        threedindat: array with data in format "var[time,x,y]" or "var[time,depth,x,y]"
+        twodinlats: array with latitude in format lat[x,y]
+        twodinlons: array with longitude in format lon[x,y]
+
+        Returns
+        -------
+        array with spatially averaged values in a format outvar[time]
+
+        """
+        latgrid=np.logical_and(twodinlats.flatten() <= self.Lat+self.RangeBB, twodinlats.flatten() >= self.Lat-self.RangeBB)
+        latindx=np.unique(np.where(latgrid.reshape(twodinlats.shape))[0])
+
+        longrid=np.logical_and(twodinlons.flatten() <= self.Lon+self.RangeBB, twodinlons.flatten() >= self.Lon-self.RangeBB)
+        lonindx=np.unique(np.where(longrid.reshape(twodinlons.shape))[1])
+
+        outvar = np.array([])
+        for i in range(threedindat.shape[0]):
+            selecteddat = threedindat[i, latindx.min():latindx.max(), lonindx.min():lonindx.max()].copy()
+            mskncdat = np.ma.masked_where(selecteddat < 0, selecteddat)
+            outvar = np.append(outvar, np.mean(mskncdat))
+
+        return outvar
+
+    def dailyinterp_monthlyvar(self, invar, der=False, k=1, s=0):
+        """
+        Methods to interpolate forcing variables
+        from months to days.
+
+         Parameters
+        ----------
+        invar: array of monthly averaged forcing variable to be interpolated
+        der: Logical, to calculate the derivatives of the spline
+
+        Returns
+        -------
+        array with daily interpolated forcing variable
+        """
+        if der:
+            x_days = np.linspace(0., (len(invar)/12.*365.)-1., len(invar)/12.*365.)
+            x_in = np.linspace(0., len(invar)/12.*365., len(invar))
+            spl = intrp.UnivariateSpline(x_in, invar, k=k, s=s)
+            outvar=np.array([])
+            for i in range(len(x_days)):
+                outvar = np.append(outvar, spl.derivatives(x_days[i])[der])
+        else:
+            x_days = np.linspace(0, len(invar)-1, len(invar)/12*365)
+            spl = intrp.UnivariateSpline(range(len(invar)), invar, k=k, s=s)
+            outvar = spl(x_days)
+        return outvar

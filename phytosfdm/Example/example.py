@@ -9,7 +9,7 @@ import matplotlib as mpl
 from phytosfdm.EnvForcing.envforcing import ExtractEnvFor
 from phytosfdm.SizeModels.sizemodels import SM
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 def environemntalforcing(lat, lon, rbb):
     tos = time.time()
