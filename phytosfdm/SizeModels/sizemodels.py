@@ -43,15 +43,16 @@ class SM:
         to identify each variable.
     """
 
-    def __init__(self, lat, lon, rangebb, model, listparams=[], defaultparams=True, assumimm="P&L", kmld=3, smld=0,
-                 kindmld="spline", kn0x=5, sn0x=None, kindn0x="spline", ksst=5, ssst=None, kindsst="spline", kpar=5,
-                 spar=None, kindpar="spline", fixs=3.0, fixsg=False, fixsn=False, fixn0x=False, cfmld=np.array([]),
-                 cfmldder=np.array([]), cfpar=np.array([]), cfsst=np.array([]), cfn0x=np.array([]),
-                 cftimedays=np.array([])):
+    def __init__(self, model, forcing, lat=None, lon=None, rangebb=None, listparams=[], defaultparams=True, assumimm="P&L",
+                 kmld=3, smld=0, kindmld="spline", kn0x=5, sn0x=None, kindn0x="spline", ksst=5, ssst=None,
+                 kindsst="spline", kpar=5, spar=None, kindpar="spline", fixs=3.0, fixsg=False, fixsn=False,
+                 fixn0x=False, cfmld=np.array([]), cfmldder=np.array([]), cfpar=np.array([]), cfsst=np.array([]),
+                 cfn0x=np.array([])):
         self.Lat = lat
         self.Lon = lon
         self.RangeBB = rangebb
         self.Model = model
+        self.forcing = forcing
         self.ListParams = listparams
         self.defaultParams = defaultparams
         self.AssumImm = assumimm
@@ -71,19 +72,33 @@ class SM:
         self.FixSG = fixsg
         self.FixSN = fixsn
         self.FixN0x = fixn0x
-        self.MLD = ExtractEnvFor(self.Lat, self.Lon, self.RangeBB, 'mld')
-        self.N0X = ExtractEnvFor(self.Lat, self.Lon, self.RangeBB, 'n0x')
-        self.SST = ExtractEnvFor(self.Lat, self.Lon, self.RangeBB, 'sst')
-        self.PAR = ExtractEnvFor(self.Lat, self.Lon, self.RangeBB, 'par')
-        self.cfmld = cfmld
-        self.cfmldder = cfmldder
-        self.cfpar = cfpar
-        self.cfsst = cfsst
-        self.cfn0x = cfn0x
-        self.cftimedays = cftimedays
+        if self.forcing == "Climatology":
+            self.MLD = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='mld')
+            self.N0X = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='n0x')
+            self.SST = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='sst')
+            self.PAR = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='par')
+        elif self.forcing == "Projections":
+            self.cfmld = cfmld
+            self.cfmldder = cfmldder
+            self.cfpar = cfpar
+            self.cfsst = cfsst
+            self.cfn0x = cfn0x
+        elif self.forcing == "Merged":
+            self.MLD = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='mld')
+            self.N0X = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='n0x')
+            self.SST = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='sst')
+            self.PAR = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='par')
+            self.cfmld = self.MLD.merge_forcing(incfvar=cfmld)
+            self.cfmldder = self.MLD.merge_forcing(incfvar=cfmldder)
+            self.cfpar = self.PAR.merge_forcing(incfvar=cfpar)
+            self.cfsst = self.SST.merge_forcing(incfvar=cfsst)
+            self.cfn0x = self.N0X.merge_forcing(incfvar=cfn0x)
         self.Params = self.setup_params()
+        if model == 'Imm_CustmForc':
+            self.timedays = np.arange(0., len(cfmld), 1.0)
+        else:
+            self.timedays = np.arange(0., self.Params['timeyears']*365., 1.0)
         self.initcond = self.initialconditions()
-        self.timedays = np.arange(0., self.Params['timeyears']*365., 1.0)
         self.outvariables = self.modelrun()
 
     def initialconditions(self):
@@ -131,7 +146,10 @@ class SM:
 
         lnvar0 = self.vlnv(25.1, 500)
         lnmean0 = self.slns(25, 500)
-        n0 = np.mean(self.N0X.outForcing[:12])
+        if self.forcing == "Climatology" or self.forcing == "Merged":
+            n0 = np.mean(self.N0X.outForcing[:12])
+        elif self.forcing == "Projections":
+            n0 = np.mean(self.cfn0x)
 
         default_parameters = {
             'kappa': 0.1,  	           # Diffusive mixing across thermocline (m*d^-1)
@@ -333,26 +351,26 @@ class SM:
 
         # Gains of phytoplankton biomass
         NutrientUptake = N/(N+self.Params['betaU']*np.exp(L)**self.Params['alphaU'])
-        LightHarvesting = 1./(self.Params['kw'] * self.cfmld[t]) * (-np.exp(1. - self.cfpar[t] / self.Params['OptI']) -
-                        (-np.exp((1. - (self.cfpar[t] * np.exp(-self.Params['kw'] * self.cfmld[t])) / self.Params['OptI']))))
-        TemperatureDepGrowth = np.exp(0.063 * self.cfsst[t])
+        LightHarvesting = 1./(self.Params['kw'] * self.cfmld[int(t)]) * (-np.exp(1. - self.cfpar[int(t)] / self.Params['OptI']) -
+                        (-np.exp((1. - (self.cfpar[int(t)] * np.exp(-self.Params['kw'] * self.cfmld[int(t)])) / self.Params['OptI']))))
+        TemperatureDepGrowth = np.exp(0.063 * self.cfsst[int(t)])
         Gains = self.Params['muP'] * NutrientUptake * LightHarvesting * TemperatureDepGrowth
 
         # Losses of phytoplankton biomass
         Grazing = self.Params['muZ']*Z*np.exp(L)**self.Params['alphaG'] / (Ped+self.Params['Kp'])
-        Sinking = (self.Params['betav']*np.exp(L)**self.Params['alphav']) / self.cfmld[t]
+        Sinking = (self.Params['betav']*np.exp(L)**self.Params['alphav']) / self.cfmld[int(t)]
         OtherPMortalities = self.Params['moP']
-        Mixing = (self.Params['kappa'] + max(self.cfmldder[t], 0.)) / self.cfmld[t]
+        Mixing = (self.Params['kappa'] + max(self.cfmldder[int(t)], 0.)) / self.cfmld[int(t)]
         Losses = Grazing + Sinking + OtherPMortalities + Mixing
 
         # Other Processes
         ZooGrowth = self.Params['deltaZ'] * Grazing * P
         ZooMortality = self.Params['moZ'] * Z**2
-        ZooMixing = Z * self.cfmldder[t] / self.cfmld[t]
+        ZooMixing = Z * self.cfmldder[int(t)] / self.cfmld[int(t)]
         UnassimilatedProduction = (1.-self.Params['deltaZ']) * Grazing * P
         Mineralization = self.Params['deltaD']*D
-        DetritusMixing = D * (self.Params['kappa'] + max(self.cfmldder[t], 0.)) / self.cfmld[t]
-        NMixing = Mixing * (self.cfn0x[t] - N)
+        DetritusMixing = D * (self.Params['kappa'] + max(self.cfmldder[int(t)], 0.)) / self.cfmld[int(t)]
+        NMixing = Mixing * (self.cfn0x[int(t)] - N)
 
         # Derivatives for the growth components of phytoplankton with respect to the trait
         tt0 = self.Params['muP']*LightHarvesting*TemperatureDepGrowth
@@ -360,13 +378,13 @@ class SM:
         d1r0 = -N*tt0*self.Params['betaU']*self.Params['alphaU']*np.exp(L)**self.Params['alphaU']\
                / (N + self.Params['betaU']*np.exp(L)**self.Params['alphaU'])**2
         d1r2 = tt2*self.Params['alphaG']*np.exp(L)**self.Params['alphaG']/(Ped + self.Params['Kp'])
-        d1r3 = self.Params['betav']*self.Params['alphav']*np.exp(L)**self.Params['alphav'] / self.cfmld[t]
+        d1r3 = self.Params['betav']*self.Params['alphav']*np.exp(L)**self.Params['alphav'] / self.cfmld[int(t)]
         d2r0 = N*tt0*self.Params['betaU']*self.Params['alphaU']**2\
                *(2*self.Params['betaU']*np.exp(L)**self.Params['alphaU']
                  /(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU']) - 1)\
                *np.exp(L)**self.Params['alphaU']/(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU'])**2
         d2r2 = tt2*self.Params['alphaG']**2*np.exp(L)**self.Params['alphaG']/(Ped + self.Params['Kp'])
-        d2r3 = self.Params['betav']*self.Params['alphav']**2*np.exp(L)**self.Params['alphav'] / self.cfmld[t]
+        d2r3 = self.Params['betav']*self.Params['alphav']**2*np.exp(L)**self.Params['alphav'] / self.cfmld[int(t)]
         d1 = d1r0-d1r2-d1r3
         d2 = d2r0-d2r2-d2r3
 
@@ -431,6 +449,8 @@ class SM:
         dxdt[32] = d2r0  # second derivative of Nutrient Uptake with respect to the trait
         dxdt[33] = d2r2  # second derivative of Grazing with respect to the trait
         dxdt[34] = d2r3  # second derivative of Sinking with respect to the trait
+
+        print
 
         return dxdt
 
@@ -1143,7 +1163,7 @@ class SM:
                 outarray = odeint(self.sizemodel_imm, self.initcond, self.timedays)
                 return outarray
             elif self.Model == "Imm_CustmForc":
-                outarray = odeint(self.sizemodel_imm_customized_forcing, self.initcond, self.cftimedays)
+                outarray = odeint(self.sizemodel_imm_customized_forcing, self.initcond, self.timedays)
                 return outarray
             elif self.Model == "Imm_NuGTest":
                 outarray = odeint(self.sizemodel_imm_nugtest, self.initcond, self.timedays)

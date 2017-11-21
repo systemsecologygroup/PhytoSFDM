@@ -26,16 +26,17 @@ class ExtractEnvFor:
     varname: is the variable names on the provided netcdf file. It could be either
         'mld' for Mixed Layer Depth,'par' for Photosynthetic Active Radiation, 'sst'
         for Sea Surface Temperature and 'n0x' for nutrient concentration below MLD.
+    incfvar: array of monthly averaged forcing variable to be interpolated
+
     """
     
-    def __init__(self, lat, lon, rangebb, varname, rcpscenario):
+    def __init__(self, lat=None, lon=None, rangebb=None, varname=None):
         self.Lat = lat
         self.Lon = lon
         self.RangeBB = rangebb
         self.varname = varname
         self.fordir = os.path.split(os.path.realpath(__file__))[0]
         self.outForcing = self.spatialave()
-        self.rcpscenario = rcpscenario
            
     def spatialave(self):
         """
@@ -137,8 +138,6 @@ class ExtractEnvFor:
         Parameters
         ----------
         time: in days
-        kind: the type of interpolation either linear, cubic, spline or
-               piecewise polynomial
         k: Degree of the smoothing spline
         s: Positive smoothing factor used to choose the number of knots
 
@@ -182,29 +181,37 @@ class ExtractEnvFor:
 
         return outvar
 
-    def dailyinterp_monthlyvar(self, invar, der=False, k=1, s=0):
+    def dailyinterp_monthlyvar(self, incfvar, der=False, k=1, s=0):
         """
         Methods to interpolate forcing variables
         from months to days.
 
-         Parameters
+        Parameters
         ----------
-        invar: array of monthly averaged forcing variable to be interpolated
         der: Logical, to calculate the derivatives of the spline
+        k: Degree of the smoothing spline
+        s: Positive smoothing factor used to choose the number of knots
 
         Returns
         -------
         array with daily interpolated forcing variable
         """
         if der:
-            x_days = np.linspace(0., (len(invar)/12.*365.)-1., len(invar)/12.*365.)
-            x_in = np.linspace(0., len(invar)/12.*365., len(invar))
-            spl = intrp.UnivariateSpline(x_in, invar, k=k, s=s)
-            outvar=np.array([])
-            for i in range(len(x_days)):
-                outvar = np.append(outvar, spl.derivatives(x_days[i])[der])
+            x_days = np.linspace(0., (len(incfvar)/12.*365.)-1., len(incfvar)/12.*365.)
+            x_in = np.linspace(0., len(incfvar)/12.*365., len(incfvar))
+            spl = intrp.UnivariateSpline(x_in, incfvar, k=k, s=s)
+            return spl.derivative()(x_days)
         else:
-            x_days = np.linspace(0, len(invar)-1, len(invar)/12*365)
-            spl = intrp.UnivariateSpline(range(len(invar)), invar, k=k, s=s)
-            outvar = spl(x_days)
-        return outvar
+            x_days = np.linspace(0, len(incfvar)-1, len(incfvar)/12*365)
+            spl = intrp.UnivariateSpline(range(len(incfvar)), incfvar, k=k, s=s)
+            return spl(x_days)
+
+    def merge_forcing(self, incfvar, der=False, yearspinoff=5):
+        timespoff = np.arange(0, 365*yearspinoff, 1)
+
+        if der:
+            climaforspoff = self.firstderivspl(timespoff)
+        else:
+            climaforspoff = self.dailyinterp(timespoff)
+
+        return np.concatenate((climaforspoff, incfvar))
