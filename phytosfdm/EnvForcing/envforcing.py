@@ -151,7 +151,7 @@ class ExtractEnvFor:
         outintp = intrp.UnivariateSpline(tmonth, self.outForcing, k=k, s=s)
         return outintp.derivative()(newt)
 
-    def spatialave_future(self, threedindat, twodinlats, twodinlons):
+    def spatialave_future(self, threedindat, twodinlats, twodinlons, indepth=None, inmld=None):
         """ Method to calculate the spatial averages of environmental forcing
         variables based on the data structure of RCP projections "var[time,x,y]"
         or "var[time,depth,x,y]" as provided by the World Climate Research Programme.
@@ -174,10 +174,17 @@ class ExtractEnvFor:
         lonindx=np.unique(np.where(longrid.reshape(twodinlons.shape))[1])
 
         outvar = np.array([])
-        for i in range(threedindat.shape[0]):
-            selecteddat = threedindat[i, latindx.min():latindx.max(), lonindx.min():lonindx.max()].copy()
-            mskncdat = np.ma.masked_where(selecteddat < 0, selecteddat)
-            outvar = np.append(outvar, np.mean(mskncdat))
+        if self.varname == 'n0x':
+            for i in range(threedindat.shape[0]):
+                (depthindx,) = (indepth >= inmld[i]).nonzero()
+                selecteddat = threedindat[i, depthindx.min(), latindx.min():latindx.max(), lonindx.min():lonindx.max()].copy()
+                mskncdat = np.ma.masked_where(selecteddat < 0, selecteddat)
+                outvar = np.append(outvar, np.mean(mskncdat))
+        else:
+            for i in range(threedindat.shape[0]):
+                selecteddat = threedindat[i, latindx.min():latindx.max(), lonindx.min():lonindx.max()].copy()
+                mskncdat = np.ma.masked_where(selecteddat < 0, selecteddat)
+                outvar = np.append(outvar, np.mean(mskncdat))
 
         return outvar
 
