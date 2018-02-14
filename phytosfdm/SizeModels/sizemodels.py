@@ -450,8 +450,6 @@ class SM:
         dxdt[33] = d2r2  # second derivative of Grazing with respect to the trait
         dxdt[34] = d2r3  # second derivative of Sinking with respect to the trait
 
-        print
-
         return dxdt
 
     def sizemodel_imm_nugtest(self, x, t):
