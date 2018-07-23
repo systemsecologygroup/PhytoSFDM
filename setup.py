@@ -22,7 +22,7 @@ setup(
     description="PhytoSFDM is a modelling framework to quantify phytoplankton community "
                 "structure and functional diversity",
     long_description=long_description,
-    url="",
+    url="https://github.com/SEGGroup/PhytoSFDM",
     packages=["phytosfdm", "phytosfdm.Example", "phytosfdm.SizeModels", "phytosfdm.EnvForcing"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
