@@ -9,7 +9,7 @@ import matplotlib as mpl
 from phytosfdm.EnvForcing.envforcing import ExtractEnvFor
 from phytosfdm.SizeModels.sizemodels import SM
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 def environemntalforcing(lat, lon, rbb):
     tos = time.time()
@@ -210,7 +210,7 @@ def modelscomparison(lat, lon, rbb):
                                                                                                                                                     
 def main():
     
-    print 'PhytoSFDM version:%s, Copyright (C) 2016 Esteban Acevedo-Trejos' % __version__
+    print 'PhytoSFDM version:%s, Copyright (C) 2018 Esteban Acevedo-Trejos' % __version__
     print 'PhytoSFDM comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.'
     print 'This is a free software, and you are welcome to redistributed it'
     print 'under certain conditions; see LICENSE for details.'

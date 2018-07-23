@@ -13,13 +13,13 @@ nutrients, phytoplankton, zooplankton, and detritus trace the fluxes between
 these state variables. Here we extended this traditional modelling structure 
 by characterising the phytoplankton community with a trait (i.e. cell size) 
 and a trade-off emerging from three allometric relationships between, cell 
-size and: 1) phytoplankton nutrient uptake, 2) zooplankton grazing and 3) 
+size and: 1) phytoplankton nutrient uptake, 2) zooplankton grazing, and 3)
 phytoplankton sinking. In these models the size structure and size diversity 
 of the phytoplankton community is modelled by explicitly quantifying a 
 finite number of phytoplankton morphotypes, each type with a specific size 
 value (i.e. full model); or by approximating the size distribution using a 
 moment closure technique, where we only quantified the total biomass, the mean 
-size and the size variance of the community (i.e. aggregate models). These 
+size, and the size variance of the community (i.e. aggregate models). These
 approaches are inspired by early works of Wirtz & Eckhardt (1996), Norberg et al.
 (2001), Bruggeman & Koojiman (2007), Bruggeman (2009) and Merico et al. (2009). 
 Some examples of more recent applications of the moment-based approximation are 
@@ -49,7 +49,8 @@ package have not been tested in Python 3.x, but further developments of the
 package will be compatible to newer versions of Python. To install it the user
 would require the latest versions of pip and setuptools. Additional dependencies
 are: matplotlib (version 1.4.3 or greater), numpy (version 1.9.2 or greater), 
-scipy (version 0.15.1 or greater) and sympy (version 0.7.6.1 or greater).
+scipy (version 0.15.1 or greater),  sympy (version 0.7.6.1 or greater) and
+basemap (verision 1.0.7 or greater).
 
 To install the package using pip just type in a terminal (Unix like systems) 
 or in a command prompt window (Windows systems):
@@ -89,13 +90,13 @@ Fix Variance and Unsustained Variance) at a specific set of coordinates, one
 can import the required library in an interactive python console as:
 
 >>> from phytosfdm.SizeModels.sizemodels import SM
->>> Lat= 47.5
->>> Lon= -15.5
->>> RBB= 2.5
->>> SM1=SM(Lat,Lon,RBB,"Imm")
+>>> Lat = 47.5
+>>> Lon = -15.5
+>>> RBB = 2.5
+>>> SM1 = SM(Lat,Lon,RBB,"Imm")
 
 where SM is the class that contains all the methods to calculate a specific size
-model, Lat and Lon are Latitude (-90 to 90 degrees, North negative) and Longitude
+model, Lat and Lon are Latitude (-90 to 90 degrees, North positive) and Longitude
 (-180 to 180 degrees, East positive), RBB is the range of the bounding box (in degrees)
 for averaging the environmental forcing variables and SM1 is an object that 
 contains the results of the size model with an immigration treatment. After 
@@ -116,10 +117,31 @@ instance "SM1" one can type in an interactive python console:
 To modify the default parameter values, for example, the user can call a new class
 instance with a tuple list with the parameter name and its new value:
 
->>> SM2.SM(Lat,Lon,RBB,"Imm",defaultParams=False,ListParams=[("timeyears",5),("muP",1.5])
+>>> SM2 = SM(Lat,Lon,RBB,"Imm",defaultParams=False,ListParams=[("timeyears",5),("muP",1.5])
 
 Please refer to the documentation inside of the class and its methods
 for further details.
+
+News
+----
+**Version 1.1.x**\ Three new methods were added to PhytoSFDM. Two in the class SM, which allow to
+a) test the effect of fixing phytoplankton mean cell size in the two size dependent processes
+(grazing or nutrient uptake), and b) test the effect of fixing the change over time of simultaneously
+the mean size and the size variance. The test using the new methods can be executed as:
+
+>>> SM3 =  SM(Lat,Lon,RBB,"Imm_NuGTest",fixs=np.log(3),fixsg=True)
+
+>>> SM4 =  SM(Lat,Lon,RBB,"Imm_NuGTest",default=False,listparams=[('N0', 10.)],fixn0x=True)
+
+>>> SM5 =  SM(Lat,Lon,RBB,"Imm_FixMeanVar",default=False,listparams=[('L_var0',5.0),('L_mean0',np.log(3)) ],fixn0x=True)
+
+The last new method on version 1.1.x allow to visualize the four environmental forcing variables
+at the selected location:
+
+>>> from phytosfdm.EnvForcing.envforcing import ExtractEnvFor
+>>> mld = ExtractEnvFor(Lat,Lon,RBB,'mld')
+>>> mld.selected_area_plots()
+
 
 Acknowledgements
 ----------------
