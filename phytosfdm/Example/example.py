@@ -210,7 +210,7 @@ def modelscomparison(lat, lon, rbb):
                                                                                                                                                     
 def main():
     
-    print 'PhytoSFDM version:%s, Copyright (C) 2016 Esteban Acevedo-Trejos' % __version__
+    print 'PhytoSFDM version:%s, Copyright (C) 2018 Esteban Acevedo-Trejos' % __version__
     print 'PhytoSFDM comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.'
     print 'This is a free software, and you are welcome to redistributed it'
     print 'under certain conditions; see LICENSE for details.'

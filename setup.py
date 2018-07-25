@@ -19,9 +19,10 @@ setup(
     author="Esteban Acevedo-Trejos",
     author_email="esteban.acevedo@zmt-bremen.de",
     license="GPLv2",
-    description="PhytoSFDM is a modelling framework to quantify phytoplankton community structure and functional diversity",
+    description="PhytoSFDM is a modelling framework to quantify phytoplankton community "
+                "structure and functional diversity",
     long_description=long_description,
-    url="",
+    url="https://github.com/SEGGroup/PhytoSFDM",
     packages=["phytosfdm", "phytosfdm.Example", "phytosfdm.SizeModels", "phytosfdm.EnvForcing"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -35,6 +36,6 @@ setup(
     ],
     entry_points={"console_scripts": ['PhytoSFDM_example = phytosfdm.Example.example:main']},
     include_package_data=True,
-    install_requires=['numpy>=1.9.2','scipy>=0.15.1','sympy>=0.7.6.1','matplotlib>=1.4.3'],
+    install_requires=['numpy>=1.9.2', 'scipy>=0.15.1', 'sympy>=0.7.6.1', 'matplotlib>=1.4.3', 'basemap>=1.0.7'],
     
 )
