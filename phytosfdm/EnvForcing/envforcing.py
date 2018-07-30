@@ -32,7 +32,7 @@ class ExtractEnvFor:
     incfvar: array of monthly averaged forcing variable to be interpolated
 
     """
-    
+
     def __init__(self, lat=None, lon=None, rangebb=None, varname=None):
         self.Lat = lat
         self.Lon = lon
@@ -40,7 +40,7 @@ class ExtractEnvFor:
         self.varname = varname
         self.fordir = os.path.split(os.path.realpath(__file__))[0]
         self.outForcing = self.spatialave()
-           
+
     def spatialave(self):
         """
         Method to extract spatially averaged environmental forcing.
@@ -51,34 +51,34 @@ class ExtractEnvFor:
         """
 
         if self.varname == 'mld':
-            ncfile = netcdf.netcdf_file(self.fordir+'/mld_vd_WOA_Monterey_and_Levitus.nc', 'r')
+            ncfile = netcdf.netcdf_file(self.fordir + '/mld_vd_WOA_Monterey_and_Levitus.nc', 'r')
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             ncdat = ncfile.variables[self.varname].data.copy()
             ncfile.close()
-            nclon_transform = np.hstack((nclon[nclon > 180]-360., nclon[nclon < 180]))
+            nclon_transform = np.hstack((nclon[nclon > 180] - 360., nclon[nclon < 180]))
             ncdat_new = np.dstack((ncdat[:, :, 180:], ncdat[:, :, :180]))
             mskdat = np.ma.masked_less(ncdat_new, 0)
             longrid, latgrid = np.meshgrid(nclon_transform, nclat)
-            selectarea = np.logical_and(longrid <= self.Lon+self.RangeBB, longrid >= self.Lon-self.RangeBB) *\
-                         np.logical_and(latgrid <= self.Lat+self.RangeBB, latgrid >= self.Lat-self.RangeBB)
+            selectarea = np.logical_and(longrid <= self.Lon + self.RangeBB, longrid >= self.Lon - self.RangeBB) * \
+                         np.logical_and(latgrid <= self.Lat + self.RangeBB, latgrid >= self.Lat - self.RangeBB)
             outforcing = np.mean(mskdat[:, selectarea], axis=1)
             return np.append(outforcing, outforcing[0])
         elif self.varname == 'par':
-            ncfile = netcdf.netcdf_file(self.fordir+'/par_MODIS_2002to2011.nc', 'r')
+            ncfile = netcdf.netcdf_file(self.fordir + '/par_MODIS_2002to2011.nc', 'r')
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             ncdat = ncfile.variables[self.varname].data.copy()
             mskdat = np.ma.masked_less(ncdat, 0)
             ncfile.close()
-            nclon_transform = np.hstack((nclon[nclon > 180]-360, nclon[nclon < 180]))
+            nclon_transform = np.hstack((nclon[nclon > 180] - 360, nclon[nclon < 180]))
             longrid, latgrid = np.meshgrid(nclon_transform, nclat)
-            selectarea = np.logical_and(longrid <= self.Lon+self.RangeBB, longrid >= self.Lon-self.RangeBB) *\
-                         np.logical_and(latgrid <= self.Lat+self.RangeBB, latgrid >= self.Lat-self.RangeBB)
+            selectarea = np.logical_and(longrid <= self.Lon + self.RangeBB, longrid >= self.Lon - self.RangeBB) * \
+                         np.logical_and(latgrid <= self.Lat + self.RangeBB, latgrid >= self.Lat - self.RangeBB)
             outforcing = np.mean(mskdat[:, selectarea], axis=1)
             return np.append(outforcing, outforcing[0])
         elif self.varname == 'n0x':
-            ncfile = netcdf.netcdf_file(self.fordir+'/n0x_WOA09.nc', 'r')
+            ncfile = netcdf.netcdf_file(self.fordir + '/n0x_WOA09.nc', 'r')
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             ncdat = ncfile.variables[self.varname].data.copy()
@@ -89,26 +89,26 @@ class ExtractEnvFor:
             for i in range(0, 12):
                 (depthindx,) = (ncdepth >= mlddat.outForcing[i]).nonzero()
                 ncdat_mld[i, :, :] = ncdat[i, depthindx.min(), :, :]
-            nclon_transform = np.hstack((nclon[nclon > 180]-360, nclon[nclon < 180]))
+            nclon_transform = np.hstack((nclon[nclon > 180] - 360, nclon[nclon < 180]))
             ncdat_new = np.dstack((ncdat_mld[:, :, 180:], ncdat_mld[:, :, :180]))
             mskdat = np.ma.masked_less(ncdat_new, 0)
             longrid, latgrid = np.meshgrid(nclon_transform, nclat)
-            selectarea = np.logical_and(longrid <= self.Lon+self.RangeBB, longrid >= self.Lon-self.RangeBB) *\
-                         np.logical_and(latgrid <= self.Lat+self.RangeBB, latgrid >= self.Lat-self.RangeBB)
+            selectarea = np.logical_and(longrid <= self.Lon + self.RangeBB, longrid >= self.Lon - self.RangeBB) * \
+                         np.logical_and(latgrid <= self.Lat + self.RangeBB, latgrid >= self.Lat - self.RangeBB)
             outforcing = np.mean(mskdat[:, selectarea], axis=1)
             return np.append(outforcing, outforcing[0])
         elif self.varname == 'sst':
-            ncfile = netcdf.netcdf_file(self.fordir+'/sst-t_an-WOA09.nc', 'r')
+            ncfile = netcdf.netcdf_file(self.fordir + '/sst-t_an-WOA09.nc', 'r')
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             ncdat = ncfile.variables[self.varname].data.copy()
             ncfile.close()
-            nclon_transform = np.hstack((nclon[nclon > 180]-360., nclon[nclon < 180]))
+            nclon_transform = np.hstack((nclon[nclon > 180] - 360., nclon[nclon < 180]))
             ncdat_new = np.dstack((ncdat[:, 0, :, 180:], ncdat[:, 0, :, :180]))
             mskdat = np.ma.masked_greater(ncdat_new, 99)
             longrid, latgrid = np.meshgrid(nclon_transform, nclat)
-            selectarea = np.logical_and(longrid <= self.Lon+self.RangeBB, longrid >= self.Lon-self.RangeBB) *\
-                         np.logical_and(latgrid <= self.Lat+self.RangeBB, latgrid >= self.Lat-self.RangeBB)
+            selectarea = np.logical_and(longrid <= self.Lon + self.RangeBB, longrid >= self.Lon - self.RangeBB) * \
+                         np.logical_and(latgrid <= self.Lat + self.RangeBB, latgrid >= self.Lat - self.RangeBB)
             outforcing = np.mean(mskdat[:, selectarea], axis=1)
             return np.append(outforcing, outforcing[0])
         else:
@@ -130,9 +130,9 @@ class ExtractEnvFor:
         -------
         The temporally interpolated environmental forcing.
         """
-        
-        tmonth = np.linspace(0., 12., 13.)
-        newt = np.mod(time, 365.)*12./365.
+
+        tmonth = np.linspace(0., 12., 13)
+        newt = np.mod(time, 365.) * 12. / 365.
         if kind == 'spline':
             outintp = intrp.UnivariateSpline(tmonth, self.outForcing, k=k, s=s)
             return outintp(newt)
@@ -141,8 +141,8 @@ class ExtractEnvFor:
             return outintp(newt)
         else:
             outintp = intrp.interp1d(tmonth, self.outForcing, kind=kind)
-            return outintp(newt)    
-    
+            return outintp(newt)
+
     def firstderivspl(self, time, k=3, s=None):
         """
         Method to calculate the first derivative of an interpolated spline.
@@ -157,85 +157,13 @@ class ExtractEnvFor:
         -------
         The first derivative of the temporally interpolated environmental forcing spline.
         """
-        
-        tmonth = np.linspace(0., 365., 13.)
+
+        tmonth = np.linspace(0., 365., 13)
         newt = np.mod(time, 365.)
         outintp = intrp.UnivariateSpline(tmonth, self.outForcing, k=k, s=s)
         return outintp.derivative()(newt)
 
-<<<<<<< HEAD
-    def spatialave_future(self, threedindat, twodinlats, twodinlons, indepth=None, inmld=None):
-        """ Method to calculate the spatial averages of environmental forcing
-        variables based on the data structure of RCP projections "var[time,x,y]"
-        or "var[time,depth,x,y]" as provided by the World Climate Research Programme.
 
-        Parameters
-        ----------
-        threedindat: array with data in format "var[time,x,y]" or "var[time,depth,x,y]"
-        twodinlats: array with latitude in format lat[x,y]
-        twodinlons: array with longitude in format lon[x,y]
-
-        Returns
-        -------
-        array with spatially averaged values in a format outvar[time]
-
-        """
-        latgrid=np.logical_and(twodinlats.flatten() <= self.Lat+self.RangeBB, twodinlats.flatten() >= self.Lat-self.RangeBB)
-        latindx=np.unique(np.where(latgrid.reshape(twodinlats.shape))[0])
-
-        longrid=np.logical_and(twodinlons.flatten() <= self.Lon+self.RangeBB, twodinlons.flatten() >= self.Lon-self.RangeBB)
-        lonindx=np.unique(np.where(longrid.reshape(twodinlons.shape))[1])
-
-        outvar = np.array([])
-        if self.varname == 'n0x':
-            for i in range(threedindat.shape[0]):
-                (depthindx,) = (indepth >= inmld[i]).nonzero()
-                selecteddat = threedindat[i, depthindx.min(), latindx.min():latindx.max(), lonindx.min():lonindx.max()].copy()
-                mskncdat = np.ma.masked_where(selecteddat < 0, selecteddat)
-                outvar = np.append(outvar, np.mean(mskncdat))
-        else:
-            for i in range(threedindat.shape[0]):
-                selecteddat = threedindat[i, latindx.min():latindx.max(), lonindx.min():lonindx.max()].copy()
-                mskncdat = np.ma.masked_where(selecteddat < 0, selecteddat)
-                outvar = np.append(outvar, np.mean(mskncdat))
-
-        return outvar
-
-    def dailyinterp_monthlyvar(self, incfvar, der=False, k=1, s=0):
-        """
-        Methods to interpolate forcing variables
-        from months to days.
-
-        Parameters
-        ----------
-        der: Logical, to calculate the derivatives of the spline
-        k: Degree of the smoothing spline
-        s: Positive smoothing factor used to choose the number of knots
-
-        Returns
-        -------
-        array with daily interpolated forcing variable
-        """
-        if der:
-            x_days = np.linspace(0., (len(incfvar)/12.*365.)-1., len(incfvar)/12.*365.)
-            x_in = np.linspace(0., len(incfvar)/12.*365., len(incfvar))
-            spl = intrp.UnivariateSpline(x_in, incfvar, k=k, s=s)
-            return spl.derivative()(x_days)
-        else:
-            x_days = np.linspace(0, len(incfvar)-1, len(incfvar)/12*365)
-            spl = intrp.UnivariateSpline(range(len(incfvar)), incfvar, k=k, s=s)
-            return spl(x_days)
-
-    def merge_forcing(self, incfvar, der=False, yearspinoff=5):
-        timespoff = np.arange(0, 365*yearspinoff, 1)
-
-        if der:
-            climaforspoff = self.firstderivspl(timespoff)
-        else:
-            climaforspoff = self.dailyinterp(timespoff)
-
-        return np.concatenate((climaforspoff, incfvar))
-=======
     def selected_area_plots(self):
         """
         Method to plot one of the averaged environmental
@@ -252,60 +180,60 @@ class ExtractEnvFor:
 
         """
         if self.varname == 'par':
-            #Extract PAR data at location
-            ncfile = netcdf.netcdf_file(self.fordir+'/par_MODIS_2002to2011.nc', 'r')
+            # Extract PAR data at location
+            ncfile = netcdf.netcdf_file(self.fordir + '/par_MODIS_2002to2011.nc', 'r')
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             ncdat = ncfile.variables[self.varname].data.copy()
             mskdat = np.ma.masked_less(ncdat, 0)
             ncfile.close()
-            nclon_transform = np.hstack((nclon[nclon > 180]-360, nclon[nclon < 180]))
+            nclon_transform = np.hstack((nclon[nclon > 180] - 360, nclon[nclon < 180]))
             longrid, latgrid = np.meshgrid(nclon_transform, nclat)
-            selectarea = np.logical_and(longrid <= self.Lon+self.RangeBB, longrid >= self.Lon-self.RangeBB) *\
-                         np.logical_and(latgrid <= self.Lat+self.RangeBB, latgrid >= self.Lat-self.RangeBB)
+            selectarea = np.logical_and(longrid <= self.Lon + self.RangeBB, longrid >= self.Lon - self.RangeBB) * \
+                         np.logical_and(latgrid <= self.Lat + self.RangeBB, latgrid >= self.Lat - self.RangeBB)
             ncdatlevs = np.arange(0, 61, 1)
             ncdatticks = [0, 15, 30, 45, 60]
             par_psfdm = ExtractEnvFor(self.Lat, self.Lon, self.RangeBB, 'par')
             var_interp = par_psfdm.dailyinterp(np.arange(0., 366., 1.0))
         if self.varname == 'mld':
-            #Extract MLD data at location
-            ncfile = netcdf.netcdf_file(self.fordir+'/mld_vd_WOA_Monterey_and_Levitus.nc', 'r')
+            # Extract MLD data at location
+            ncfile = netcdf.netcdf_file(self.fordir + '/mld_vd_WOA_Monterey_and_Levitus.nc', 'r')
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             ncdat = ncfile.variables[self.varname].data.copy()
             ncfile.close()
-            nclon_transform = np.hstack((nclon[nclon > 180]-360, nclon[nclon < 180]))
+            nclon_transform = np.hstack((nclon[nclon > 180] - 360, nclon[nclon < 180]))
             ncdat_new = np.dstack((ncdat[:, :, 180:], ncdat[:, :, :180]))
             mskdat = np.ma.masked_less(ncdat_new, 0)
             longrid, latgrid = np.meshgrid(nclon_transform, nclat)
-            selectarea = np.logical_and(longrid <= self.Lon+self.RangeBB, longrid >= self.Lon-self.RangeBB) *\
-                         np.logical_and(latgrid <= self.Lat+self.RangeBB, latgrid >= self.Lat-self.RangeBB)
+            selectarea = np.logical_and(longrid <= self.Lon + self.RangeBB, longrid >= self.Lon - self.RangeBB) * \
+                         np.logical_and(latgrid <= self.Lat + self.RangeBB, latgrid >= self.Lat - self.RangeBB)
             ncdatlevs = np.arange(0, 501, 5)
             ncdatticks = [0, 250, 500]
             mld_psfdm = ExtractEnvFor(self.Lat, self.Lon, self.RangeBB, 'mld')
             var_interp = mld_psfdm.dailyinterp(np.arange(0., 366., 1.0), k=3)
         if self.varname == 'sst':
-            #Extract SST data at location
-            ncfile = netcdf.netcdf_file(self.fordir+'/sst-t_an-WOA09.nc', 'r')
+            # Extract SST data at location
+            ncfile = netcdf.netcdf_file(self.fordir + '/sst-t_an-WOA09.nc', 'r')
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             ncdat = ncfile.variables[self.varname].data.copy()
             ncfile.close()
-            nclon_transform = np.hstack((nclon[nclon > 180]-360, nclon[nclon < 180]))
+            nclon_transform = np.hstack((nclon[nclon > 180] - 360, nclon[nclon < 180]))
             ncdat_new = np.dstack((ncdat[:, 0, :, 180:], ncdat[:, 0, :, :180]))
             mskdat = np.ma.masked_greater(ncdat_new, 99)
             longrid, latgrid = np.meshgrid(nclon_transform, nclat)
-            selectarea = np.logical_and(longrid <= self.Lon+self.RangeBB, longrid >= self.Lon-self.RangeBB) *\
-                         np.logical_and(latgrid <= self.Lat+self.RangeBB, latgrid >= self.Lat-self.RangeBB)
+            selectarea = np.logical_and(longrid <= self.Lon + self.RangeBB, longrid >= self.Lon - self.RangeBB) * \
+                         np.logical_and(latgrid <= self.Lat + self.RangeBB, latgrid >= self.Lat - self.RangeBB)
             ncdatlevs = np.arange(-5, 41, 0.5)
             ncdatticks = [-5, 10, 25, 40]
             sst_psfdm = ExtractEnvFor(self.Lat, self.Lon, self.RangeBB, 'sst')
             var_interp = sst_psfdm.dailyinterp(np.arange(0., 366., 1.0), k=5)
         if self.varname == 'n0x':
-            #Calculate average MLD at location
+            # Calculate average MLD at location
             mlddat = ExtractEnvFor(self.Lat, self.Lon, self.RangeBB, 'mld')
-            #Extract N0x data at location
-            ncfile = netcdf.netcdf_file(self.fordir+'/n0x_WOA09.nc', 'r')
+            # Extract N0x data at location
+            ncfile = netcdf.netcdf_file(self.fordir + '/n0x_WOA09.nc', 'r')
             nclat = ncfile.variables['lat'].data.copy()
             nclon = ncfile.variables['lon'].data.copy()
             ncdat = ncfile.variables[self.varname].data.copy()
@@ -315,19 +243,19 @@ class ExtractEnvFor:
             for i in range(0, 12):
                 (depthindx,) = (ncdepth >= mlddat.outForcing[i]).nonzero()
                 ncdat_mld[i, :, :] = ncdat[i, depthindx.min(), :, :]
-            nclon_transform = np.hstack((nclon[nclon > 180]-360, nclon[nclon < 180]))
+            nclon_transform = np.hstack((nclon[nclon > 180] - 360, nclon[nclon < 180]))
             ncdat_new = np.dstack((ncdat_mld[:, :, 180:], ncdat_mld[:, :, :180]))
             mskdat = np.ma.masked_less(ncdat_new, 0)
-            longrid, latgrid = np.meshgrid(nclon_transform,nclat)
-            selectarea = np.logical_and(longrid <= self.Lon+self.RangeBB, longrid >= self.Lon-self.RangeBB) *\
-                         np.logical_and(latgrid <= self.Lat+self.RangeBB, latgrid >= self.Lat-self.RangeBB)
+            longrid, latgrid = np.meshgrid(nclon_transform, nclat)
+            selectarea = np.logical_and(longrid <= self.Lon + self.RangeBB, longrid >= self.Lon - self.RangeBB) * \
+                         np.logical_and(latgrid <= self.Lat + self.RangeBB, latgrid >= self.Lat - self.RangeBB)
             ncdatlevs = np.arange(0, 51, 0.5)
             ncdatticks = [0, 10, 20, 30, 40, 50]
             n0x_psfdm = ExtractEnvFor(self.Lat, self.Lon, self.RangeBB, 'n0x')
             var_interp = n0x_psfdm.dailyinterp(np.arange(0., 366., 1.0), k=5)
 
-        #Plots
-        #Global maps with location of the selected area overlay
+        # Plots
+        # Global maps with location of the selected area overlay
         # of monthly averaged environmental forcing variable
         f13, axs13 = plt.subplots(3, 4, sharex='col', sharey='row')
         monthlist = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -336,22 +264,48 @@ class ExtractEnvFor:
             xx, yy = mapbase(longrid, latgrid)
             cs2 = mapbase.contourf(xx, yy, mskdat[idx, :, :], ncdatlevs, cmap=plt.cm.Spectral_r)
             mapbase.colorbar(cs2, 'bottom', ticks=ncdatticks)
-            plons, plats = mapbase([self.Lon+self.RangeBB, self.Lon-self.RangeBB, self.Lon-self.RangeBB,
-                                    self.Lon+self.RangeBB], [self.Lat+self.RangeBB, self.Lat+self.RangeBB,
-                                                             self.Lat-self.RangeBB, self.Lat-self.RangeBB])
+            plons, plats = mapbase([self.Lon + self.RangeBB, self.Lon - self.RangeBB, self.Lon - self.RangeBB,
+                                    self.Lon + self.RangeBB], [self.Lat + self.RangeBB, self.Lat + self.RangeBB,
+                                                               self.Lat - self.RangeBB, self.Lat - self.RangeBB])
             mapbase.fillcontinents()
             xypoly = zip(plons, plats)
             poly = Polygon(xypoly, facecolor='none', edgecolor='black', lw=1.25)
             axs.add_patch(poly)
             axs.set_title(monthlist[idx])
-        #Scatter plot of environmental forcing and interpolated data
+        # Scatter plot of environmental forcing and interpolated data
         tdot = np.array([1., 32., 60., 91., 121., 152., 182., 213., 244., 274., 305., 335., 365.])
         plt.figure()
         plt.plot(np.arange(0., 366., 1.0), var_interp, c='black', lw=3)
         plt.plot(tdot, np.append(np.mean(mskdat[:, selectarea], axis=1), np.mean(mskdat[0, selectarea])), 'o')
         plt.ylabel(self.varname.upper())
         plt.xlabel('Month')
-        plt.xticks(tdot, monthlist+['Jan'], rotation=30)
+        plt.xticks(tdot, monthlist + ['Jan'], rotation=30)
 
         plt.show()
->>>>>>> master
+
+
+def dailyinterp_monthlyvar(incfvar, der=False, k=1, s=0):
+    """
+    Methods to interpolate forcing variables
+    from months to days.
+
+    Parameters
+    ----------
+    der: Logical, to calculate the derivatives of the spline
+    k: Degree of the smoothing spline
+    s: Positive smoothing factor used to choose the number of knots
+
+    Returns
+    -------
+    array with daily interpolated forcing variable
+    """
+    if der:
+        x_days = np.linspace(0., (len(incfvar) / 12. * 365.) - 1., len(incfvar) / 12. * 365.)
+        x_in = np.linspace(0., len(incfvar) / 12. * 365., len(incfvar))
+        spl = intrp.UnivariateSpline(x_in, incfvar, k=k, s=s)
+        return spl.derivative()(x_days)
+    else:
+        x_days = np.linspace(0, len(incfvar) - 1, len(incfvar) / 12 * 365)
+        spl = intrp.UnivariateSpline(range(len(incfvar)), incfvar, k=k, s=s)
+        return spl(x_days)
+

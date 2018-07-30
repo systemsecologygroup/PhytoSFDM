@@ -83,16 +83,6 @@ class SM:
             self.cfpar = cfpar
             self.cfsst = cfsst
             self.cfn0x = cfn0x
-        elif self.forcing == "Merged":
-            self.MLD = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='mld')
-            self.N0X = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='n0x')
-            self.SST = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='sst')
-            self.PAR = ExtractEnvFor(lat=self.Lat, lon=self.Lon, rangebb=self.RangeBB, varname='par')
-            self.cfmld = self.MLD.merge_forcing(incfvar=cfmld)
-            self.cfmldder = self.MLD.merge_forcing(incfvar=cfmldder)
-            self.cfpar = self.PAR.merge_forcing(incfvar=cfpar)
-            self.cfsst = self.SST.merge_forcing(incfvar=cfsst)
-            self.cfn0x = self.N0X.merge_forcing(incfvar=cfn0x)
         self.Params = self.setup_params()
         if model == 'Imm_CustmForc':
             self.timedays = np.arange(0., len(cfmld), 1.0)
@@ -146,7 +136,7 @@ class SM:
 
         lnvar0 = self.vlnv(25.1, 500)
         lnmean0 = self.slns(25, 500)
-        if self.forcing == "Climatology" or self.forcing == "Merged":
+        if self.forcing == "Climatology":
             n0 = np.mean(self.N0X.outForcing[:12])
         elif self.forcing == "Projections":
             n0 = np.mean(self.cfn0x)
