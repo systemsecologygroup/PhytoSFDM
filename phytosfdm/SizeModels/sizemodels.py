@@ -44,7 +44,7 @@ class SM:
     """
 
     def __init__(self, model, forcing, lat=None, lon=None, rangebb=None, listparams=[], defaultparams=True,
-                 grazingfunc='linear', assumimm="P&L", kmld=3, smld=0, kindmld="spline", kn0x=5, sn0x=None,
+                 grazingfunc='linearAF', assumimm="P&L", kmld=3, smld=0, kindmld="spline", kn0x=5, sn0x=None,
                  kindn0x="spline", ksst=5, ssst=None, kindsst="spline", kpar=5, spar=None, kindpar="spline",
                  fixs=3.0, fixsg=False, fixsn=False, fixn0x=False, cfmld=np.array([]), cfmldder=np.array([]),
                  cfpar=np.array([]), cfsst=np.array([]), cfn0x=np.array([])):
@@ -100,6 +100,14 @@ class SM:
         if self.Model == 'FullModel':
             return np.concatenate(([[self.Params['N0']], [self.Params['Z0']], [self.Params['D0']],
                                     [self.Params['P0']]*self.Params['NoMtype']]), 0)
+        elif self.Model == 'Imm_ManyZ':
+            return np.concatenate(([[self.Params['N0']], [self.Params['D0']], [self.Params['P0']],
+                                    [self.Params['L_mean0']], [self.Params['L_var0']],
+                                    [self.Params['Z0']]*self.Params['NoZtype']]), 0)
+        elif self.Model == 'Imm_TwoZ':
+            return np.concatenate(([[self.Params['N0']], [self.Params['Z0']], [self.Params['Z0']],
+                                    [self.Params['D0']], [self.Params['P0']], [self.Params['L_mean0']],
+                                    [self.Params['L_var0']], [0]*28]), 0)
         else:
             return np.concatenate(([[self.Params['N0']], [self.Params['Z0']], [self.Params['D0']], [self.Params['P0']],
                                     [self.Params['L_mean0']], [self.Params['L_var0']], [0]*29]), 0)
@@ -171,7 +179,7 @@ class SM:
             'D0': 0.01,                # Initial Detritus concentration (mmol*m^-3)
             'P0': 0.1,                 # Initial Phytoplankton concentration (mmol*m^-3)
             'timeyears': 10.0,         # Maximum running time of the model (years)
-            'NoMtype': 10,             # Number of morphotypes for the full model
+            'NoMtype': 10,             # Number of phytoplankton morphotypes for the full model
             'sizemin': 0.2,            # Minimum size of the phytoplankton community (micro m ESD)
             'sizemax': 50.,            # Maximum size of the phytoplankton community (micro m ESD)
             'alphaZ': -0.4,            # Slope of allometric function for zooplankton growth rate
@@ -181,8 +189,11 @@ class SM:
             'sizePtol': 0.5,           # Phytoplankton size tolerance (micro m ESD)
             'alphaZP': 0.56,           # Slope of allometric function to determined the optimum prey size
                                        # for zooplankton (micro m ESD * [micro m ESD]^-1)
-            'betaZP': 0.65             # Intercept of allometric function to determined the optimum prey size
+            'betaZP': 0.65,            # Intercept of allometric function to determined the optimum prey size
                                        # for zooplankton (micro m ESD)
+            'Zsizerange': [250],       # List with the average size of zooplankton (micro m ESD)
+            'NoZtype': 1,              # Number of zooplankton morphotypes
+            'sizeZ2': 500              # Size of second zooplankton grazer (micro m ESD)
         }
 
         if self.defaultParams:
@@ -349,7 +360,7 @@ class SM:
         # Edible phytoplankton
         if self.GrazingFunc == 'linearAF':
             Ped = P*(np.exp(L)**self.Params['alphaG']+0.5*V*self.Params['alphaG']**2*np.exp(L)**self.Params['alphaG'])
-        elif self.GrazingFunc == 'normalAF':
+        elif self.GrazingFunc == 'gaussianAF':
             Ped = P * np.exp(-((L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))
                     / self.Params['sizePtol'])**2) + 0.5 * V * 2. * P *\
                     (-1. + 2.*(L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))**2
@@ -366,7 +377,7 @@ class SM:
         # Losses of phytoplankton biomass
         if self.GrazingFunc == 'linearAF':
             Grazing = self.Params['muZ']*Z*np.exp(L)**self.Params['alphaG'] / (Ped+self.Params['Kp'])
-        elif self.GrazingFunc == 'normalAF':
+        elif self.GrazingFunc == 'gaussianAF':
             Grazing = Z * (self.Params['betaZ'] * self.Params['sizeZ']**self.Params['alphaZ']) *\
                   np.exp(-((L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))
                   / self.Params['sizePtol'])**2) *\
@@ -389,13 +400,13 @@ class SM:
         tt0 = self.Params['muP']*LightHarvesting*TemperatureDepGrowth
         if self.GrazingFunc == 'linearAF':
             tt2 = self.Params['muZ']*Z
-        elif self.GrazingFunc == 'normalAF':
+        elif self.GrazingFunc == 'gaussianAF':
             tt2 = Z * (self.Params['betaZ'] * self.Params['sizeZ']**self.Params['alphaZ'])
         d1r0 = -N*tt0*self.Params['betaU']*self.Params['alphaU']*np.exp(L)**self.Params['alphaU']\
                / (N + self.Params['betaU']*np.exp(L)**self.Params['alphaU'])**2
         if self.GrazingFunc == 'linearAF':
             d1r2 = tt2*self.Params['alphaG']*np.exp(L)**self.Params['alphaG']/(Ped + self.Params['Kp'])
-        elif self.GrazingFunc == 'normalAF':
+        elif self.GrazingFunc == 'gaussianAF':
             d1r2 = -tt2*(2*L - 2*np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))\
                * np.exp(-(L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))**2
                / self.Params['sizePtol']**2) / (self.Params['sizePtol']**2 * (Ped + self.Params['Kp']))
@@ -406,7 +417,7 @@ class SM:
                *np.exp(L)**self.Params['alphaU']/(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU'])**2
         if self.GrazingFunc == 'linearAF':
             d2r2 = tt2*self.Params['alphaG']**2*np.exp(L)**self.Params['alphaG']/(Ped + self.Params['Kp'])
-        elif self.GrazingFunc == 'normalAF':
+        elif self.GrazingFunc == 'gaussianAF':
             d2r2 = 2 * tt2 * (-1 + 2*(L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))**2
                / self.Params['sizePtol']**2)\
                * np.exp(-(L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))**2
@@ -626,10 +637,11 @@ class SM:
 
         return dxdt
 
-    def sizemodel_imm_newg(self, x, t):
+    def sizemodel_imm_onez(self, x, t):
         """
         This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
-        and a grazing formulation based on predator preferences proposed by Banas (2011) Ecol. Mod.
+        and a grazing formulation based on a single predator with a gaussian
+        size preference as proposed by Banas (2011) Ecol. Mod.
 
         Parameters
         ----------
@@ -769,6 +781,298 @@ class SM:
         dxdt[32] = d2r0  # second derivative of Nutrient Uptake with respect to the trait
         dxdt[33] = d2r2  # second derivative of Grazing with respect to the trait
         dxdt[34] = d2r3  # second derivative of Sinking with respect to the trait
+
+        return dxdt
+
+    def sizemodel_imm_twoz(self, x, t):
+        """
+        This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
+        and a grazing formulation based on a two predator with a gaussian
+        size preference as proposed by Banas (2011) Ecol. Mod.
+
+        Parameters
+        ----------
+        x: array with initial conditions for the state variables
+        t: time
+        """
+        # Initialization of state variables and dummy variables to store the biomass fluxes
+        N = x[0]
+        Z1 = x[1]
+        Z2 = x[2]
+        D = x[3]
+        P = x[4]
+        L = x[5]
+        V = x[6]
+        dxdt = np.zeros(35)
+
+        # Edible phytoplankton
+        Ped1 = P * np.exp(-((L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))
+                    / self.Params['sizePtol'])**2) + 0.5 * V * 2. * P *\
+                    (-1. + 2.*(L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))**2
+                    / self.Params['sizePtol']**2) * \
+                    np.exp(-(L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))**2
+                    / self.Params['sizePtol']**2) / self.Params['sizePtol']**2
+        Ped2 = P * np.exp(-((L - np.log(self.Params['betaZP'] * self.Params['sizeZ2']**self.Params['alphaZP']))
+                    / self.Params['sizePtol'])**2) + 0.5 * V * 2. * P *\
+                    (-1. + 2.*(L - np.log(self.Params['betaZP'] * self.Params['sizeZ2']**self.Params['alphaZP']))**2
+                    / self.Params['sizePtol']**2) * \
+                    np.exp(-(L - np.log(self.Params['betaZP'] * self.Params['sizeZ2']**self.Params['alphaZP']))**2
+                    / self.Params['sizePtol']**2) / self.Params['sizePtol']**2
+        # Gains of phytoplankton biomass
+        NutrientUptake = N / (N + self.Params['betaU'] * np.exp(L)**self.Params['alphaU'])
+        LightHarvesting = 1./(self.Params['kw'] * self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld))\
+                          * (-np.exp(1. - self.PAR.dailyinterp(t, kind=self.kindpar, k=self.kpar, s=self.spar)
+                            / self.Params['OptI']) - (-np.exp((1. - (self.PAR.dailyinterp(t, kind=self.kindpar,
+                            k=self.kpar, s=self.spar) * np.exp(-self.Params['kw'] * self.MLD.dailyinterp(t,
+                            kind=self.kindmld, k=self.kmld, s=self.smld))) / self.Params['OptI']))))
+        TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t, kind=self.kindsst, k=self.ksst, s=self.ssst))
+        Gains = self.Params['muP'] * NutrientUptake * LightHarvesting * TemperatureDepGrowth
+
+        # Losses of phytoplankton biomass
+        Grazing1 = Z1 * (self.Params['betaZ'] * self.Params['sizeZ']**self.Params['alphaZ']) *\
+                  np.exp(-((L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))
+                  / self.Params['sizePtol'])**2) *\
+                  P / (Ped1 + self.Params['Kp'])
+        Grazing2 = Z2 * (self.Params['betaZ'] * self.Params['sizeZ2']**self.Params['alphaZ']) *\
+                  np.exp(-((L - np.log(self.Params['betaZP'] * self.Params['sizeZ2']**self.Params['alphaZP']))
+                  / self.Params['sizePtol'])**2) *\
+                  P / (Ped2 + self.Params['Kp'])
+        Sinking = (self.Params['betav'] * np.exp(L)**self.Params['alphav'])\
+                  / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        OtherPMortalities = self.Params['moP']
+        Mixing = (self.Params['kappa'] + max(self.MLD.firstderivspl(t, k=self.kmld, s=self.smld), 0.)) \
+                 / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        Losses = Grazing1 + Grazing2 + Sinking + OtherPMortalities + Mixing
+
+        # Other Processes
+        Zoo1Growth = self.Params['deltaZ'] * Grazing1 * P
+        Zoo1Mortality = self.Params['moZ'] * Z1**2
+        Zoo1Mixing = Z1 * self.MLD.firstderivspl(t, k=self.kmld, s=self.smld) \
+                    / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        UnassimilatedProductionZ1 = (1.-self.Params['deltaZ']) * Grazing1 * P
+        Zoo2Growth = self.Params['deltaZ'] * Grazing2 * P
+        Zoo2Mortality = self.Params['moZ'] * Z2**2
+        Zoo2Mixing = Z2 * self.MLD.firstderivspl(t, k=self.kmld, s=self.smld) \
+                    / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        UnassimilatedProductionZ2 = (1.-self.Params['deltaZ']) * Grazing2 * P
+        Mineralization = self.Params['deltaD'] * D
+        DetritusMixing = D * (self.Params['kappa'] + max(self.MLD.firstderivspl(t, k=self.kmld, s=self.smld), 0.)) \
+                         / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        NMixing = Mixing * (self.N0X.dailyinterp(t, kind=self.kindn0x, k=self.kn0x, s=self.sn0x) - N)
+
+        # Derivatives for the growth components of phytoplankton with respect to the trait
+        tt0 = self.Params['muP']*LightHarvesting*TemperatureDepGrowth
+        tt2Z1 = Z1 * (self.Params['betaZ'] * self.Params['sizeZ']**self.Params['alphaZ'])
+        tt2Z2 = Z2 * (self.Params['betaZ'] * self.Params['sizeZ2']**self.Params['alphaZ'])
+        d1r0 = -N*tt0*self.Params['betaU']*self.Params['alphaU']*np.exp(L)**self.Params['alphaU']\
+               /(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU'])**2
+        d1r2Z1 = -tt2Z1*(2*L - 2*np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))\
+               * np.exp(-(L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))**2
+               / self.Params['sizePtol']**2) / (self.Params['sizePtol']**2 * (Ped1 + self.Params['Kp']))
+        d1r2Z2 = -tt2Z2*(2*L - 2*np.log(self.Params['betaZP'] * self.Params['sizeZ2']**self.Params['alphaZP']))\
+               * np.exp(-(L - np.log(self.Params['betaZP'] * self.Params['sizeZ2']**self.Params['alphaZP']))**2
+               / self.Params['sizePtol']**2) / (self.Params['sizePtol']**2 * (Ped2 + self.Params['Kp']))
+        d1r3 = self.Params['betav']*self.Params['alphav']*np.exp(L)**self.Params['alphav']\
+               / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        d2r0 = N*tt0*self.Params['betaU']*self.Params['alphaU']**2\
+               * (2*self.Params['betaU']*np.exp(L)**self.Params['alphaU']
+                 /(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU']) - 1)\
+               * np.exp(L)**self.Params['alphaU']/(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU'])**2
+        d2r2Z1 = 2 * tt2Z1 * (-1 + 2*(L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))**2
+               / self.Params['sizePtol']**2)\
+               * np.exp(-(L - np.log(self.Params['betaZP'] * self.Params['sizeZ']**self.Params['alphaZP']))**2
+               / self.Params['sizePtol']**2) / (self.Params['sizePtol']**2 * (Ped1 + self.Params['Kp']))
+        d2r2Z2 = 2 * tt2Z2 * (-1 + 2*(L - np.log(self.Params['betaZP'] * self.Params['sizeZ2']**self.Params['alphaZP']))**2
+               / self.Params['sizePtol']**2)\
+               * np.exp(-(L - np.log(self.Params['betaZP'] * self.Params['sizeZ2']**self.Params['alphaZP']))**2
+               / self.Params['sizePtol']**2) / (self.Params['sizePtol']**2 * (Ped2 + self.Params['Kp']))
+        d2r3 = self.Params['betav']*self.Params['alphav']**2*np.exp(L)**self.Params['alphav']\
+               /self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        d1 = d1r0-d1r2Z1-d1r2Z2-d1r3
+        d2 = d2r0-d2r2Z1-d2r2Z2-d2r3
+
+        # Corrections of higher order moments
+        E = 0.5*V*d2
+        EN = 0.5*V*d2r0
+        EZ1 = self.Params['deltaZ'] * 0.5*V*d2r2Z1 * P
+        EZ2 = self.Params['deltaZ'] * 0.5*V*d2r2Z2 * P
+        EZD = (1.-self.Params['deltaZ']) * 0.5*V*d2r2Z1 * d2r2Z2 * P
+
+        # Skewness and kurtosis according to normal distribution
+        m3 = 0.
+        m4 = 3.
+
+        # Assumptions on the immigrating community
+        # Default assumptions as used by Acevedo-Trejos et al. (2015) in Sci.Rep.
+        self.Params['L_mean0'] = L
+        Immigration = self.Params['deltaI'] * P
+
+        # state variables
+        dxdt[0] = -P * (Gains + EN) + Mineralization + NMixing  # Nutrients
+        dxdt[1] = Zoo1Growth + EZ1 - Zoo1Mortality - Zoo1Mixing  # Zooplankton 1
+        dxdt[2] = Zoo2Growth + EZ2 - Zoo2Mortality - Zoo2Mixing  # Zooplankton 2
+        dxdt[3] = UnassimilatedProductionZ1 + UnassimilatedProductionZ2 + P * OtherPMortalities + EZD + Zoo1Mortality + Zoo2Mortality - Mineralization - DetritusMixing  # Detritus
+        dxdt[4] = P * (Gains - Losses + E) + Immigration  # Phytoplankton
+        dxdt[5] = V*d1 + m3*0.5*d2 + Immigration/P*(self.Params['L_mean0']-L)  # Mean Size
+        dxdt[6] = 0.5*(m4-1.)*V**2*d2 + Immigration/P*((self.Params['L_var0']-V) + (self.Params['L_mean0']-L)**2)  # Size Variance
+
+        # Biomass Fluxes
+        dxdt[7] = P * Gains  # gross growth
+        dxdt[8] = NutrientUptake  # Nutrient Uptake
+        dxdt[9] = LightHarvesting  # Light Harvesting
+        dxdt[10] = TemperatureDepGrowth  # Phytoplankton temperature dependency
+        dxdt[11] = P * Grazing1  # Grazing
+        dxdt[12] = P * Grazing2  # Grazing
+        dxdt[13] = P * Sinking  # Phytoplankton Sinking
+        dxdt[14] = P * OtherPMortalities  # Other P mortalities
+        dxdt[15] = P * Mixing  # Phytoplankton Mixing
+        dxdt[16] = Zoo1Growth  # Zooplankton Growth
+        dxdt[17] = Zoo1Mortality  # Zooplankton Predator Mortality
+        dxdt[18] = Zoo1Mixing  # Zooplankton Mixing
+        dxdt[19] = UnassimilatedProductionZ1  # Unassimilated Production
+        dxdt[20] = Zoo2Growth  # Zooplankton Growth
+        dxdt[21] = Zoo2Mortality  # Zooplankton Predator Mortality
+        dxdt[22] = Zoo2Mixing  # Zooplankton Mixing
+        dxdt[23] = UnassimilatedProductionZ2  # Unassimilated Production
+        dxdt[24] = Mineralization  # Mineralization
+        dxdt[25] = DetritusMixing  # Detritus Mixing
+        dxdt[26] = NMixing  # Nutrients Mixing
+        dxdt[27] = Immigration  # Immigration
+        dxdt[28] = P*E  # P Higher order correction
+        dxdt[29] = P*EN  # N Higher order correction
+        dxdt[30] = EZ1  # Grazing Higher order correction
+        dxdt[31] = EZ2  # Grazing Higher order correction
+        dxdt[32] = EZD  # Unassimilated Production Higher order correction
+        dxdt[33] = V*d1  # Changes in mean size
+        dxdt[34] = self.Params['betaU']*np.exp(L)**self.Params['alphaU']  # N Half Saturation
+
+        return dxdt
+
+    def sizemodel_imm_manyz(self, x, t):
+        """
+        This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
+        and a grazing formulation based many predators with a gaussian
+        size preference as proposed by Banas (2011) Ecol. Mod.
+
+
+        Parameters
+        ----------
+        x: array with initial conditions for the state variables
+        t: time
+        """
+        # Initialization of state variables and dummy variables to store the biomass fluxes
+        N = x[0]
+        D = x[1]
+        P = x[2]
+        L = x[3]
+        V = x[4]
+        Zs = x[5:]
+        dxdt = np.zeros(len(x))
+        Zsizerange = self.Params['Zsizerange']
+
+        # Gains of phytoplankton biomass
+        NutrientUptake = N / (N + self.Params['betaU'] * np.exp(L)**self.Params['alphaU'])
+        LightHarvesting = 1./(self.Params['kw'] * self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld))\
+                          * (-np.exp(1. - self.PAR.dailyinterp(t, kind=self.kindpar, k=self.kpar, s=self.spar)
+                            / self.Params['OptI']) - (-np.exp((1. - (self.PAR.dailyinterp(t, kind=self.kindpar,
+                            k=self.kpar, s=self.spar) * np.exp(-self.Params['kw'] * self.MLD.dailyinterp(t,
+                            kind=self.kindmld, k=self.kmld, s=self.smld))) / self.Params['OptI']))))
+        TemperatureDepGrowth = np.exp(0.063 * self.SST.dailyinterp(t, kind=self.kindsst, k=self.ksst, s=self.ssst))
+        Gains = self.Params['muP'] * NutrientUptake * LightHarvesting * TemperatureDepGrowth
+
+        # Losses of phytoplankton biomass
+        Sinking = (self.Params['betav'] * np.exp(L)**self.Params['alphav'])\
+                  / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        OtherPMortalities = self.Params['moP']
+        Mixing = (self.Params['kappa'] + max(self.MLD.firstderivspl(t, k=self.kmld, s=self.smld), 0.)) \
+                 / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        Losses = Sinking + OtherPMortalities + Mixing
+
+        # Other Processes
+        Mineralization = self.Params['deltaD'] * D
+        DetritusMixing = D * (self.Params['kappa'] + max(self.MLD.firstderivspl(t, k=self.kmld, s=self.smld), 0.)) \
+                         / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        NMixing = Mixing * (self.N0X.dailyinterp(t, kind=self.kindn0x, k=self.kn0x, s=self.sn0x) - N)
+
+        # Derivatives for the growth components of phytoplankton with respect to the trait
+        tt0 = self.Params['muP']*LightHarvesting*TemperatureDepGrowth
+        d1r0 = -N*tt0*self.Params['betaU']*self.Params['alphaU']*np.exp(L)**self.Params['alphaU']\
+               /(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU'])**2
+        d1r3 = self.Params['betav']*self.Params['alphav']*np.exp(L)**self.Params['alphav']\
+               / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        d2r0 = N*tt0*self.Params['betaU']*self.Params['alphaU']**2\
+               * (2*self.Params['betaU']*np.exp(L)**self.Params['alphaU']
+                 /(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU']) - 1)\
+               * np.exp(L)**self.Params['alphaU']/(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU'])**2
+        d2r3 = self.Params['betav']*self.Params['alphav']**2*np.exp(L)**self.Params['alphav']\
+               /self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+        d1P = d1r0-d1r3
+        d2P = d2r0-d2r3
+
+        # Corrections of higher order moments
+        E = 0.5*V*d2P
+        EN = 0.5*V*d2r0
+
+        # Skewness and kurtosis according to normal distribution
+        m3 = 0.
+        m4 = 3.
+
+        # Assumptions on the immigrating community
+        # Default assumptions as used by Acevedo-Trejos et al. (2015) in Sci.Rep.
+        self.Params['L_mean0'] = L
+        Immigration = self.Params['deltaI'] * P
+
+        # state variables
+        dxdt[0] = -P * (Gains + EN) + Mineralization + NMixing  # Nutrients
+        dxdt[1] = P * OtherPMortalities - Mineralization - DetritusMixing  # Detritus
+        dxdt[2] = P * (Gains - Losses + E) + Immigration  # Phytoplankton
+        dxdt[3] = V*d1P + m3*0.5*d2P + Immigration/P*(self.Params['L_mean0']-L)  # Mean Size
+        dxdt[4] = 0.5*(m4-1.)*V**2*d2P + Immigration/P*((self.Params['L_var0']-V) + (self.Params['L_mean0']-L)**2)  # Size Variance
+
+        for i in range(len(Zs)):
+            Z = Zs[i]
+            ZSize = Zsizerange[i]
+
+            # Edible phytoplankton
+            Ped = P * np.exp(-((L - np.log(self.Params['betaZP'] * ZSize**self.Params['alphaZP']))
+                    / self.Params['sizePtol'])**2) + 0.5 * V * 2. * P *\
+                    (-1. + 2.*(L - np.log(self.Params['betaZP'] * ZSize**self.Params['alphaZP']))**2
+                    / self.Params['sizePtol']**2) * \
+                    np.exp(-(L - np.log(self.Params['betaZP'] * ZSize**self.Params['alphaZP']))**2
+                    / self.Params['sizePtol']**2) / self.Params['sizePtol']**2
+
+            Grazing = Z * (self.Params['betaZ'] * ZSize**self.Params['alphaZ']) *\
+                  np.exp(-((L - np.log(self.Params['betaZP'] * ZSize**self.Params['alphaZP']))
+                  / self.Params['sizePtol'])**2) *\
+                  P / (Ped + self.Params['Kp'])
+
+            # Other Processes
+            ZooGrowth = self.Params['deltaZ'] * Grazing * P
+            ZooMortality = self.Params['moZ'] * Z**2
+            ZooMixing = Z * self.MLD.firstderivspl(t, k=self.kmld, s=self.smld) \
+                    / self.MLD.dailyinterp(t, kind=self.kindmld, k=self.kmld, s=self.smld)
+            UnassimilatedProduction = (1.-self.Params['deltaZ']) * Grazing * P
+
+            # Derivatives for the growth components of phytoplankton with respect to the trait
+            tt2 = Z * (self.Params['betaZ'] * ZSize**self.Params['alphaZ'])
+            d1r2 = -tt2*(2*L - 2*np.log(self.Params['betaZP'] * ZSize**self.Params['alphaZP']))\
+               * np.exp(-(L - np.log(self.Params['betaZP'] * ZSize**self.Params['alphaZP']))**2
+               / self.Params['sizePtol']**2) / (self.Params['sizePtol']**2 * (Ped + self.Params['Kp']))
+            d2r2 = 2 * tt2 * (-1 + 2*(L - np.log(self.Params['betaZP'] * ZSize**self.Params['alphaZP']))**2
+               / self.Params['sizePtol']**2)\
+               * np.exp(-(L - np.log(self.Params['betaZP'] * ZSize**self.Params['alphaZP']))**2
+               / self.Params['sizePtol']**2) / (self.Params['sizePtol']**2 * (Ped + self.Params['Kp']))
+
+            # Corrections of higher order moments
+            EZ = self.Params['deltaZ'] * 0.5*V*d2r2 * P
+            EZD = (1.-self.Params['deltaZ']) * 0.5*V*d2r2 * P
+
+            # state variables
+            dxdt[1] += UnassimilatedProduction + EZD + ZooMortality # Detritus
+            dxdt[2] += P * (0.5*V*(-d2r2) - Grazing)  # Phytoplankton
+            dxdt[3] += V*(-d1r2) + m3*0.5*(-d2r2)  # Mean Size
+            dxdt[4] += 0.5*(m4-1.)*V**2*(-d2r2)  # Size Variance
+            dxdt[5+i] = ZooGrowth + EZ - ZooMortality - ZooMixing  # Zooplankton
 
         return dxdt
 
@@ -1339,8 +1643,14 @@ class SM:
             elif self.Model == "Imm_NuGTest":
                 outarray = odeint(self.sizemodel_imm_nugtest, self.initcond, self.timedays)
                 return outarray
-            elif self.Model == "Imm_NewG":
-                outarray = odeint(self.sizemodel_imm_newg, self.initcond, self.timedays)
+            elif self.Model == "Imm_OneZ":
+                outarray = odeint(self.sizemodel_imm_onez, self.initcond, self.timedays)
+                return outarray
+            elif self.Model == "Imm_TwoZ":
+                outarray = odeint(self.sizemodel_imm_twoz, self.initcond, self.timedays)
+                return outarray
+            elif self.Model == "Imm_ManyZ":
+                outarray = odeint(self.sizemodel_imm_manyz, self.initcond, self.timedays)
                 return outarray
             elif self.Model == "Imm_FixMeanVar":
                 outarray = odeint(self.sizemodel_fixmeanvar, self.initcond, self.timedays)
