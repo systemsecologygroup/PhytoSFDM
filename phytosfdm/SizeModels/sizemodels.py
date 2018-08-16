@@ -94,8 +94,7 @@ class SM:
 
     def initialconditions(self):
         """
-        Method to assign the initial conditions depending on the type of model
-        structure, i.e. full or aggregate model.
+        Method to assign the initial conditions based on the specific model variant.
         """
         if self.Model == 'FullModel':
             return np.concatenate(([[self.Params['N0']], [self.Params['Z0']], [self.Params['D0']],
@@ -114,8 +113,8 @@ class SM:
 
     def slns(self, ms, sv):
         """
-        Method to log-transform the mean trait, based on the log-normal relationship,
-        suggested by Bruggeman (2009).
+        Method to log-transform the mean trait, based on the log-normal
+        relationship as suggested by Bruggeman (2009).
 
         Parameters
         ----------
@@ -127,7 +126,7 @@ class SM:
     def vlnv(self, ms, sv):
         """
         Method to log-transform the trait variance, based on the log-normal
-        relationship,suggested by Bruggeman (2009).
+        relationship  as suggested by Bruggeman (2009).
 
         Parameters
         ----------
@@ -138,9 +137,8 @@ class SM:
 
     def setup_params(self):
         """
-        Method to assign either the default values to all parameters
-        or to specify the new values according to the values provided
-        on ListParams.
+        Method to assign either default values to all parameters
+        or new values as provided in ListParams.
         """
 
         lnvar0 = self.vlnv(25.1, 500)
@@ -340,8 +338,8 @@ class SM:
     def sizemodel_imm_external_forcing(self, x, t):
         """
         This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
-        This implementation allows the user to input customized forcing variables rather than
-        to used the provided climatological averaged variables.
+        This implementation allows the user to input external forcing variables rather than
+        use the provided climatological averaged variables.
 
         Parameters
         ----------
@@ -493,8 +491,8 @@ class SM:
     def sizemodel_imm_nugtest(self, x, t):
         """
         This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
-        This implementation test the effect of specific size on grazing and nutrient uptake
-        and the effect of fixed nutrient supply.
+        This implementation test the effect an specific phytoplankton size have on grazing
+        and nutrient uptake size dependent processes.
 
         Parameters
         ----------
@@ -640,8 +638,9 @@ class SM:
     def sizemodel_imm_onez(self, x, t):
         """
         This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
-        and a grazing formulation based on a single predator with a gaussian
-        size preference as proposed by Banas (2011) Ecol. Mod.
+        with an additional grazing formulation proposed by Banas (2011) Ecol. Mod.
+        This model variant considers only a single predator with an specific size and a gaussian
+        size preference for the prey.
 
         Parameters
         ----------
@@ -787,8 +786,9 @@ class SM:
     def sizemodel_imm_twoz(self, x, t):
         """
         This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
-        and a grazing formulation based on a two predator with a gaussian
-        size preference as proposed by Banas (2011) Ecol. Mod.
+        with an additional grazing formulation proposed by Banas (2011) Ecol. Mod.
+        This model variant considers two predators with an specific size and a gaussian
+        size preference for their prey.
 
         Parameters
         ----------
@@ -951,8 +951,9 @@ class SM:
     def sizemodel_imm_manyz(self, x, t):
         """
         This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
-        and a grazing formulation based many predators with a gaussian
-        size preference as proposed by Banas (2011) Ecol. Mod.
+        with an additional grazing formulation proposed by Banas (2011) Ecol. Mod.
+        This model variant considers various predators, each with an specific size and a gaussian
+        size preference for their prey.
 
 
         Parameters
@@ -1327,7 +1328,7 @@ class SM:
     def sizemodel_fixmeanvar(self, x, t):
         """
         This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
-        but with a fix size variance.
+        but with a fix mean size and size variance.
 
         Parameters
         ----------
@@ -1443,7 +1444,7 @@ class SM:
     def sizemodel_unvar(self, x, t):
         """
         This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
-        but without any mechanism to sustain variance.
+        but without any mechanism to sustain size variance.
 
         Parameters
         ----------
@@ -1630,7 +1631,7 @@ class SM:
     def modelrun(self):
         """
         Method to integrate a specific size-based model variant.
-        The integration it is done with the module "integrate.odeint",
+        The integration is done with the module "integrate.odeint",
         from the library scipy.
         """
         try:
@@ -1701,3 +1702,17 @@ class SM:
 
         PED = S**c
         print 'Edible P d^2=', sympy.diff(PED, trait, 2)
+
+    def get_derivatives_gaussian_graizng(self):
+        """
+        Symbolic solutions for the derivatives of zooplankton grazing terms
+        with respect to the trait. This grazing formulation is based on
+        the gaussian size selectivity proposed by Banas (2011) Ecol. Mod.
+        """
+        tt2, L, Ped, c, d, e, Pbiom = sympy.symbols('tt2,L,Ped,c,d,e,Pbiom')
+        sm_banasG = tt2*(sympy.exp(-((L-sympy.log(c))/d)**2))/(Ped+e)
+        print 'Grazing d=', sympy.diff(sm_banasG, L)
+        print 'Grazing d^2=', sympy.diff(sm_banasG, L, 2)
+
+        PED=(sympy.exp(-((L-sympy.log(c))/d)**2))*Pbiom
+        print 'Edible P d^2=', sympy.diff(PED, L, 2)
