@@ -85,7 +85,7 @@ class SM:
             self.cfsst = cfsst
             self.cfn0x = cfn0x
         self.Params = self.setup_params()
-        if model == 'Imm_ExternalForcing':
+        if model == 'Imm_ExternalForcing' or model == 'Imm_HC_ExtFor':
             self.timedays = np.arange(0., len(cfmld), 1.0)
         else:
             self.timedays = np.arange(0., self.Params['timeyears']*365., 1.0)
@@ -107,7 +107,7 @@ class SM:
             return np.concatenate(([[self.Params['N0']], [self.Params['Z0']], [self.Params['Z0']],
                                     [self.Params['D0']], [self.Params['P0']], [self.Params['L_mean0']],
                                     [self.Params['L_var0']], [0]*28]), 0)
-        elif self.Model == 'Imm_HC':
+        elif self.Model == 'Imm_HC' or self.Model == 'Imm_HC_ExtFor':
             return np.concatenate(([[self.Params['N0']], [self.Params['H0']], [self.Params['C0']],
                                     [self.Params['D0']], [self.Params['P0']], [self.Params['L_mean0']],
                                     [self.Params['L_var0']], [0]*28]), 0)
@@ -1226,6 +1226,141 @@ class SM:
 
         return dxdt
 
+    def sizemodel_imm_hc_extfor(self, x, t):
+        """
+        This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
+        This variant splits Z into herbivore and carnivore components and allows the user to
+        input external forcing variables.
+
+        Parameters
+        ----------
+        x: array with initial conditions for the state variables
+        t: time
+        """
+        # Initialization of state variables and dummy variables to store the biomass fluxes
+        N = x[0]
+        H = x[1]
+        C = x[2]
+        D = x[3]
+        P = x[4]
+        L = x[5]
+        V = x[6]
+        dxdt = np.zeros(35)
+
+        # Edible phytoplankton
+        Ped = P*(np.exp(L)**self.Params['alphaG']+0.5*V*self.Params['alphaG']**2*np.exp(L)**self.Params['alphaG'])
+
+        # Gains of phytoplankton biomass
+        NutrientUptake = N/(N+self.Params['betaU']*np.exp(L)**self.Params['alphaU'])
+        LightHarvesting = 1./(self.Params['kw'] * self.cfmld[int(t)]) * (-np.exp(1. - self.cfpar[int(t)]
+                            / self.Params['OptI']) - (-np.exp((1. - (self.cfpar[int(t)] * np.exp(-self.Params['kw']
+                            * self.cfmld[int(t)])) / self.Params['OptI']))))
+        TemperatureDepGrowth = np.exp(0.063 * self.cfsst[int(t)])
+        Gains = self.Params['muP'] * NutrientUptake * LightHarvesting * TemperatureDepGrowth
+
+        # Losses of phytoplankton biomass
+        HerbGrazing = self.Params['muH']*H*np.exp(L)**self.Params['alphaG']/(Ped+self.Params['Kp'])
+        Sinking = (self.Params['betav']*np.exp(L)**self.Params['alphav'])\
+                  / self.cfmld[int(t)]
+        OtherPMortalities = self.Params['moP']
+        Mixing = (self.Params['kappa'] + max(self.cfmldder[int(t)], 0.)) \
+                 / self.cfmld[int(t)]
+        Losses = HerbGrazing + Sinking + OtherPMortalities + Mixing
+
+        # Other Processes
+        HerbGrowth = self.Params['deltaH'] * HerbGrazing * P
+        HerbMortality = self.Params['moH'] * H
+        HerbMixing = H * self.cfmldder[int(t)] \
+                    / self.cfmld[int(t)]
+        UnassimilatedProduction = (1.-self.Params['deltaH']) * HerbGrazing * P
+        CarnGrazing = (self.Params['mpC'] * self.Params['muC'] * H ** 2) \
+                      / (self.Params['mpC'] + self.Params['muC'] * H ** 2)
+
+        CarnGrowth = self.Params['deltaC'] * CarnGrazing * C
+        CarnMortality = self.Params['moC'] * C ** 2
+        CarnMixing = C * (self.cfmldder[int(t)]
+                    / self.cfmld[int(t)])
+        UnassimilatedCarnivory = (1.-self.Params['deltaC']) * CarnGrazing * C
+        Mineralization = self.Params['deltaD']*D
+        DetritusMixing = D * (self.Params['kappa'] + max(self.cfmldder[int(t)], 0.)) \
+                         / self.cfmld[int(t)]
+        NMixing = Mixing * (self.cfn0x[int(t)] - N)
+
+        # Derivatives for the growth components of phytoplankton with respect to the trait
+        tt0 = self.Params['muP']*LightHarvesting*TemperatureDepGrowth
+        tt2 = self.Params['muH']*H
+        d1r0 = -N*tt0*self.Params['betaU']*self.Params['alphaU']*np.exp(L)**self.Params['alphaU']\
+               /(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU'])**2
+        d1r2 = tt2*self.Params['alphaG']*np.exp(L)**self.Params['alphaG']/(Ped + self.Params['Kp'])
+        d1r3 = self.Params['betav']*self.Params['alphav']*np.exp(L)**self.Params['alphav']\
+               / self.cfmld[int(t)]
+        d2r0 = N*tt0*self.Params['betaU']*self.Params['alphaU']**2\
+               *(2*self.Params['betaU']*np.exp(L)**self.Params['alphaU']
+                 /(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU']) - 1)\
+               *np.exp(L)**self.Params['alphaU']/(N + self.Params['betaU']*np.exp(L)**self.Params['alphaU'])**2
+        d2r2 = tt2*self.Params['alphaG']**2*np.exp(L)**self.Params['alphaG']/(Ped + self.Params['Kp'])
+        d2r3 = self.Params['betav']*self.Params['alphav']**2*np.exp(L)**self.Params['alphav']\
+               / self.cfmld[int(t)]
+        d1 = d1r0-d1r2-d1r3
+        d2 = d2r0-d2r2-d2r3
+
+        # Corrections of higher order moments
+        E = 0.5*V*d2
+        EN = 0.5*V*d2r0
+        EH = self.Params['deltaH'] * 0.5*V*d2r2 * P
+        EHD = (1.-self.Params['deltaH']) * 0.5*V*d2r2 * P
+
+        # Skewness and kurtosis according to normal distribution
+        m3 = 0.
+        m4 = 3.
+
+        # Assumptions on the immigrating community
+        # Default assumptions as used by Acevedo-Trejos et al. (2015) in Sci.Rep.
+        self.Params['L_mean0'] = L
+        Immigration = self.Params['deltaI'] * P
+
+        # state variables
+        dxdt[0] = -P * (Gains + EN) + Mineralization + NMixing  # Nutrients
+        dxdt[1] = HerbGrowth + EH - HerbMortality - HerbMixing  # Herbivore
+        dxdt[2] = CarnGrowth - CarnMortality - CarnMixing  # Carnivore
+        dxdt[3] = UnassimilatedProduction + UnassimilatedCarnivory + P * OtherPMortalities + EHD + HerbMortality +\
+                  CarnMortality - Mineralization - DetritusMixing  # Detritus
+        dxdt[4] = P * (Gains - Losses + E) + Immigration  # Phytoplankton
+        dxdt[5] = V*d1 + m3*0.5*d2 + Immigration/P*(self.Params['L_mean0']-L)  # Mean Size
+        dxdt[6] = 0.5*(m4-1.)*V**2*d2 + Immigration/P*((self.Params['L_var0']-V) + (self.Params['L_mean0']-L)**2)  # Size Variance
+
+        # Biomass Fluxes
+        dxdt[7] = P * Gains  # gross growth
+        dxdt[8] = NutrientUptake  # Nutrient Uptake
+        dxdt[9] = LightHarvesting  # Light Harvesting
+        dxdt[10] = TemperatureDepGrowth  # Phytoplankton temperature dependency
+        dxdt[11] = P * HerbGrazing  # Herbivore Grazing
+        dxdt[12] = P * Sinking  # Phytoplankton Sinking
+        dxdt[13] = P * OtherPMortalities  # Other P mortalities
+        dxdt[14] = P * Mixing  # Phytoplankton Mixing
+        dxdt[15] = HerbGrowth  # Herbivore Growth
+        dxdt[16] = HerbMortality  # Other Herbivore Mortality
+        dxdt[17] = HerbMortality  # Herbivore Mixing
+        dxdt[18] = UnassimilatedProduction  # Unassimilated Production
+        dxdt[19] = CarnGrowth # Carnivore Growth
+        dxdt[20] = CarnMortality # Other Carnivore Mortality
+        dxdt[21] = CarnMixing # Carnivore Mixing
+        dxdt[22] = CarnGrazing * C # Carnivore Grazing
+        dxdt[23] = Mineralization  # Mineralization
+        dxdt[24] = DetritusMixing  # Detritus Mixing
+        dxdt[25] = NMixing  # Nutrients Mixing
+        dxdt[26] = Immigration  # Immigration
+        dxdt[27] = V*d1  # Changes in mean size
+        dxdt[28] = 0.5*(m4-1.)*V**2*d2  # Changes in size variance
+        dxdt[29] = Immigration/P*((self.Params['L_var0']-V) + (self.Params['L_mean0']-L)**2)  # Immigrating size variance
+        dxdt[30] = self.Params['betaU']*np.exp(L)**self.Params['alphaU']  # N Half Saturation
+        dxdt[31] = d2  # second derivative with respect to trait
+        dxdt[32] = d2r0  # second derivative of Nutrient Uptake with respect to the trait
+        dxdt[33] = d2r2  # second derivative of Grazing with respect to the trait
+        dxdt[34] = d2r3  # second derivative of Sinking with respect to the trait
+
+        return dxdt
+
     def sizemodel_traitdif(self, x, t):
         """
         This size based model variant is based on Acevedo-Trejos et al. (2015) in Sci. Rep.
@@ -1801,6 +1936,9 @@ class SM:
                 return outarray
             elif self.Model == "Imm_HC":
                 outarray = odeint(self.sizemodel_imm_hc, self.initcond, self.timedays)
+                return outarray
+            elif self.Model == "Imm_HC_ExtFor":
+                outarray = odeint(self.sizemodel_imm_hc_extfor, self.initcond, self.timedays)
                 return outarray
             elif self.Model == "Imm_ManyZ":
                 outarray = odeint(self.sizemodel_imm_manyz, self.initcond, self.timedays)

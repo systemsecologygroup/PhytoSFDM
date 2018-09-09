@@ -137,7 +137,7 @@ class ExtractEnvFor:
             outintp = intrp.UnivariateSpline(tmonth, self.outForcing, k=k, s=s)
             return outintp(newt)
         elif kind == 'PWPoly':
-            outintp = intrp.PchipInterpolator(tmonth, self.outForcing)
+            outintp = intrp.PchipInterpolator(tmonth, self.outForcing.data)
             return outintp(newt)
         else:
             outintp = intrp.interp1d(tmonth, self.outForcing, kind=kind)

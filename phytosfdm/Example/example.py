@@ -9,9 +9,10 @@ import matplotlib as mpl
 from phytosfdm.EnvForcing.envforcing import ExtractEnvFor
 from phytosfdm.SizeModels.sizemodels import SM
 
-__version__ = "1.2.0b4"
+__version__ = "1.2.0b5"
 
-def environemntalforcing(lat, lon, rbb):
+
+def environmentalforcing(lat, lon, rbb):
     tos = time.time()
     print '\nComputation Time of Environmental Forcing'
     # Extract environmental forcing using the class ExtractEnvFor in the module envforcing
@@ -49,7 +50,7 @@ def environemntalforcing(lat, lon, rbb):
     ax4.set_xlabel('Time (days)', fontsize=14)
 
 
-def modelscomparison(lat, lon, rbb):
+def modelcomparison(lat, lon, rbb):
     tos = time.time()
     print '\nComputation Time of Size Models'
     # Calculation of Size Models
@@ -224,9 +225,9 @@ def main():
     
     print '\nSize Model variants calculated at test location: %.2f°N %.2f°W' % (Latitude, abs(Longitude))
 
-    environemntalforcing(Latitude, Longitude, RangeBoundingBox)
+    environmentalforcing(Latitude, Longitude, RangeBoundingBox)
     
-    modelscomparison(Latitude, Longitude, RangeBoundingBox)
+    modelcomparison(Latitude, Longitude, RangeBoundingBox)
     
     plt.show()
 
